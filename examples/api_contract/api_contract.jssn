@@ -1,0 +1,111 @@
+meta {
+  jssn_version: "0.1"
+  entry: ApiContract
+}
+
+type {
+  // common
+  uuid ^= str(uuid)
+  date_time ^= str(date-time)
+
+  UserId = uuid
+
+  // small reusable primitives
+  Page = int(1..)
+  PageSize = int(1..100)
+
+  // enums
+  UserStatus = enum: str {
+    ACTIVE
+    SUSPENDED
+    DELETED
+  }
+
+  SortOrder = enum: str {
+    ASC
+    DESC
+  }
+
+  // error code: string enum (협업에 매우 자주 등장)
+  ErrorCode = enum: str {
+    INVALID_ARGUMENT
+    UNAUTHORIZED
+    FORBIDDEN
+    NOT_FOUND
+    CONFLICT
+    INTERNAL
+  }
+}
+
+schema ErrorResponse {
+  error: {
+    code: ErrorCode
+    message: str(1..200)
+    request_id?: str(1..64)
+    details?: {
+      // key는 자유, value는 string만
+      *: str(1..200)
+      ...
+    }
+    ...
+  }
+}
+
+schema Pagination {
+  page: Page
+  page_size: PageSize
+  total_items: int(0..)
+  total_pages: int(0..)
+}
+
+schema User {
+  id: UserId
+  email: str(email, 3..254)
+  name: str(1..50)
+  status: UserStatus
+  created_at: date_time
+  updated_at?: date_time
+}
+
+schema CreateUserRequest {
+  email: str(email, 3..254)
+  name: str(1..50)
+}
+
+schema CreateUserResponse {
+  user: User
+}
+
+schema ListUsersQuery {
+  page?: Page
+  page_size?: PageSize
+  status?: UserStatus
+  sort?: {
+    by: str(1..30)
+    order?: SortOrder
+    ...
+  }
+  ...
+}
+
+schema ListUsersResponse {
+  users: [User...]
+  pagination: Pagination
+}
+
+schema ApiContract {
+  // 이 schema는 “예제 묶음” 역할. 실제 서비스에선 endpoint별 entry를 따로 둘 수도 있음.
+  create_user: {
+    request: CreateUserRequest
+    response: CreateUserResponse | ErrorResponse
+    ...
+  }
+
+  list_users: {
+    query: ListUsersQuery
+    response: ListUsersResponse | ErrorResponse
+    ...
+  }
+
+  ...
+}

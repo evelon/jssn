@@ -1,0 +1,56 @@
+meta {
+  jssn_version: "0.1"
+  entry: TypeShowcase
+}
+
+type {
+  // primitive constraints
+  SmallInt = int(0..9)
+  UserId = str(uuid)
+
+  // enum types
+  Status = enum: str {
+    ACTIVE
+    DISABLED
+    BANNED
+  }
+
+  // literal / union
+  YesNo = "YES" | "NO"
+
+  // inline-only reusable
+  TinyCount ^= int(0..3)
+}
+
+schema TypeShowcase {
+  id: UserId
+
+  status: Status
+  flag: YesNo
+
+  score: SmallInt
+  retry: TinyCount
+
+  // arrays
+  tags: [str...]
+  scores: (1..5)[int...]
+
+  // tuples
+  pair: [str, int]
+  open_pair: [str, int, ...]
+  typed_tail: [str, int, SmallInt...]
+
+  // object shapes
+  profile: {
+    name: str(1..20)
+    age?: int(0..150)
+    email?: str(email)
+    ...
+  }
+
+  metadata?: {
+    created_at: str(date-time)
+    updated_at?: str(date-time)
+    ...
+  }
+}

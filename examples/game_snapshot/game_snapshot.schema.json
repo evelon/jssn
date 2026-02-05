@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/GameSnapshot",
+  "$defs": {
+    "CaseId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "PlayerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "SeatNo": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 7
+    },
+    "PhaseType": {
+      "type": "string",
+      "enum": ["NIGHT", "DISCUSS", "VOTE"]
+    },
+    "LifeState": {
+      "type": "string",
+      "enum": ["ALIVE", "DEAD"]
+    },
+    "VoteType": {
+      "type": "string",
+      "enum": ["RED", "BLUE"]
+    },
+    "CaseStatus": {
+      "type": "string",
+      "enum": ["RUNNING", "ENDED", "INTERRUPTED"]
+    },
+    "Player": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/PlayerId" },
+        "seat": { "$ref": "#/$defs/SeatNo" },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
+        "life": { "$ref": "#/$defs/LifeState" },
+        "eliminated": { "type": "boolean" }
+      },
+      "required": ["id", "seat", "name", "life"]
+    },
+    "Phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phase_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "type": { "$ref": "#/$defs/PhaseType" },
+        "round": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "opened_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["phase_id", "type", "round", "opened_at"]
+    },
+    "Vote": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": { "$ref": "#/$defs/VoteType" },
+        "from": { "$ref": "#/$defs/SeatNo" },
+        "to": { "$ref": "#/$defs/SeatNo" },
+        "weight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        }
+      },
+      "required": ["type", "from", "to", "weight"]
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vote_type": { "$ref": "#/$defs/VoteType" },
+        "targeted": { "$ref": "#/$defs/SeatNo" },
+        "executed": { "type": "boolean" }
+      },
+      "required": ["vote_type", "targeted", "executed"]
+    },
+    "GameSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "case_state": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "case_id": { "$ref": "#/$defs/CaseId" },
+            "status": { "$ref": "#/$defs/CaseStatus" },
+            "round_no": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": ["case_id", "status", "round_no"]
+        },
+        "phase_state": { "$ref": "#/$defs/Phase" },
+        "players": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Player" }
+        },
+        "vote_meta": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Vote" }
+        },
+        "vote_result": { "$ref": "#/$defs/Result" }
+      },
+      "required": ["schema_version", "case_state", "phase_state", "players"]
+    }
+  }
+}

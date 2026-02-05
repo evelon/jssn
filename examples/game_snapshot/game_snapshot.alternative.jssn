@@ -1,0 +1,41 @@
+meta {
+  jssn_version: "0.1"
+  entry: GameSnapshot
+}
+
+schema GameSnapshot {
+  schema_version: int(1..)
+  case_state: {
+    case_id: str(uuid)
+    status: str(enum RUNNING|ENDED|INTERRUPTED)
+    round_no: int(0..)
+  }
+  phase_state: {
+    phase_id: str(uuid)
+    type: str(enum NIGHT|DISCUSS|VOTE)
+    round: int(0..)
+    opened_at: str(date-time)
+  }
+  players: [
+    {
+        id: str(uuid)
+        seat_no: int(0..7)
+        name: str(1..20)
+        life: str(enum ALIVE|DEAD)
+        eliminated?: bool
+    }...
+  ]
+  vote_meta?: [
+    {
+        type: str(enum RED|BLUE)
+        from: str(uuid)
+        to: str(uuid)
+        weight: int(1..3)
+    }...
+]
+  vote_result?: {
+    vote_type: str(enum RED|BLUE)
+    targeted: int(0..7)
+    executed: bool
+  }
+}
