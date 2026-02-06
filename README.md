@@ -1,186 +1,117 @@
-# JSSN (JSON Schema Symbolized Notation)
+# JSSN (JSON Schema Simplified Notation)
 
-**JSSN** is a schema‑first DSL designed to generate canonical JSON Schema in a way that is readable, expressive, and deterministic.
+JSSN is a human-oriented authoring language for JSON Schema.
 
-It focuses on **human‑authored schema design**, while using JSON Schema as a compilation target.
+It is designed for developers who have used JSON Schema before, but find it
+difficult to read, write, review, and maintain as schemas grow in size and depth.
+JSSN focuses on clarity, intent, and predictable structure, while remaining
+directly translatable to standard JSON Schema.
 
-> Status: experimental language design (v0.1 draft)
+Links:
 
----
-
-## Why JSSN?
-
-Writing raw JSON Schema directly is often:
-
-- verbose
-- repetitive
-- hard to diff
-- difficult to reason about structurally
-
-JSSN exists to provide:
-
-- a concise schema authoring language
-- strong canonicalization rules
-- deterministic JSON Schema emission
-- reusable type definitions
-- readable constraints and metadata
-
-JSSN is not a replacement for JSON Schema —  
-it is a **language that compiles into JSON Schema**.
+- Spec: `JSSN-Spec.md`
+- Examples: `examples/`
 
 ---
 
-## Design Goals
+## Why JSSN
 
-JSSN is designed with the following goals:
+JSON Schema is a powerful and widely adopted specification, but it is primarily
+designed as a machine-oriented interchange format rather than a language for
+humans to author directly.
 
-### Human‑first authoring
+In practice, authoring JSON Schema often becomes problematic:
 
-Readable, writable, and structurally clear schema definitions.
+- Deep nesting quickly harms readability
+- Small structural mistakes are easy to introduce and hard to detect
+- Meaningful diffs become difficult as schemas grow verbose
+- Expressing intent often requires indirect or repetitive constructs
 
-### Canonical output
+JSSN exists to address these issues.
 
-Two semantically identical schemas should emit identical JSON Schema.
+JSSN is not a replacement for JSON Schema. Instead, it is an authoring notation
+that allows developers to describe schemas in a concise, readable form, and then
+emit standard JSON Schema from it.
 
-### Deterministic compilation
-
-No ambiguity in how a JSSN document maps to JSON Schema.
-
-### Separation of concerns
-
-Clear distinction between:
-
-- type
-- constraint
-- format
-- metadata (annotations)
-
-### JSON Schema compatibility
-
-Everything expressible in meaningful JSON Schema should be representable in JSSN.
+The language intentionally targets a well-defined subset of JSON Schema features,
+favoring predictability, portability, and ease of reasoning over maximal
+expressiveness.
 
 ---
 
-## Example
+## Quick Look
+
+A minimal example showing what JSSN looks like:
 
 ```jssn
-meta {
-  jssn_version: "0.1"
-  entry: CaseSnapshot
-}
-
-type {
-  SeatNo = int(0..7)
-  uuid ^= str(uuid)
-}
-
-schema Player {
-  id: uuid
-  seat: SeatNo
-}
-
-schema CaseSnapshot {
-  case_id: uuid
-  players: [Player...]
+{
+  id: str(uuid)
+  status: str(enum ACTIVE|INACTIVE)
+  score: int(0..100)
 }
 ```
 
-This compiles into canonical JSON Schema with:
+This example illustrates the core ideas of JSSN:
 
-- `$defs` for reusable types
-- `$ref` usage
-- deterministic structure
-- consistent constraints
-
----
-
-## Core Concepts
-
-### Schema‑first DSL
-
-JSSN documents describe schema structures first, not runtime data.
-
-### JSON Schema as target
-
-JSSN is compiled/emitted into JSON Schema.  
-JSON Schema remains the validation authority.
-
-### Canonical form
-
-JSSN defines canonical output rules so that:
-
-- formatting is stable
-- diffs are meaningful
-- emitters can normalize structure
-
-### Type system
-
-JSSN supports:
-
-- primitive types
-- constraints and ranges
-- enums
-- const literals
-- reusable types
-- inline vs `$defs` types
-- arrays and tuples
-- object property rules
-
-### Annotation system
-
-Metadata is supported without affecting validation:
-
-- description
-- examples
-- default
-- deprecated
-
-Annotations map directly to JSON Schema annotations.
+- JSON-like structure
+- Explicit types
+- Constraints expressed inline
+- Compact enum notation
 
 ---
 
-## Project Status
+## What JSSN Is
 
-This repository currently contains:
+JSSN is an authoring language that produces JSON Schema.
 
-- JSSN language draft (v0.1)
-- design exploration
-- internal documentation
-- personal experimentation
+It provides:
 
-It is **not yet a production‑ready language** and has no official tooling.
+- A compact syntax for common schema patterns
+- Inline constraints that make intent explicit
+- Readable structures that scale better than raw JSON Schema
 
----
-
-## Repository Structure
-
-```
-/spec
-  JSSN-Spec.md           # canonical English spec (SSOT)
-  spec.ko.summary.md     # personal Korean summary
-```
-
-Additional tooling or parser implementations may be added later.
+JSSN does not attempt to expose every feature of JSON Schema. Constructs that do
+not map cleanly or predictably to standard JSON Schema are intentionally excluded.
 
 ---
 
-## Intended Use
+## Design Scope
 
-JSSN is currently designed for:
+JSSN is designed around the following principles:
 
-- personal schema design exploration
-- JSON Schema authoring experiments
-- language design experimentation
+- **Human readability first**  
+  Schemas should be easy to scan, review, and discuss.
 
-Future possibilities include:
+- **Direct JSON Schema mapping**  
+  Every JSSN construct maps directly to standard JSON Schema without relying on
+  implementation-specific behavior.
 
-- parser/emitter implementation
-- formatter
-- schema tooling
-- public language release
+- **Subset by design**  
+  JSSN intentionally avoids features that introduce ambiguity, excessive
+  complexity, or validator-dependent semantics.
+
+JSSN favors being easy to reason about over being maximally expressive.
 
 ---
 
-## License
+## Format Support
 
-TBD
+JSSN allows arbitrary `format` values supported by JSON Schema.
+Format validation behavior depends on the target validator and is not enforced
+by JSSN itself.
+
+---
+
+## Status
+
+**Experimental**
+
+The language and specification are still evolving. Syntax and semantics may
+change based on feedback and real-world usage.
+
+---
+
+## Documentation
+
+- Language specification: `JSSN-Spec.md`
+- Example schemas: `examples/`
