@@ -1,8 +1,8 @@
 # JSSN (JSON Schema Symbolized Notation)
 
-## JSSN Specification — Draft v0.1
+## JSSN Specification — Draft v0.2
 
-> v0.1 defines the core JSSN language only.  
+> v0.2 defines the core JSSN language only.  
 > Module systems, multi-file composition, and advanced tooling semantics are intentionally out of scope.
 
 > Pronunciation: "jay-es-son" (J-S-S-N)
@@ -91,17 +91,29 @@ Allowed blocks:
 
 - `meta { ... }` — require, one
 - `inline { ... }` — optional, at most one
-- `def <Name> { ... }` — required, one or more
+- `def <Name> <TypeExpr>` — required, one or more
+  - `<TypeExpr>` may be **any valid type expression**, including object, array, scalar, union, enum, or literal.
+  - If `<TypeExpr>` is an **object type**, it is written using `{ ... }` (block form).
+  - If `<TypeExpr>` is an **array type**, it is written using `[ ... ]` (array or tuple form).
+  - Otherwise, `<TypeExpr>` is written inline on the same line as the `def` header.
+  - `<TypeExpr>` MUST be a single, complete type expression and MUST NOT contain additional declarations.
+
+Example:
 
 Example:
 
 ```jssn
-meta { ... }
+meta {
+  jssn_version: "0.2"
+}
 
-inline { ... }
+def Root {
+  id: int
+}
 
-def ExampleSchema { ... }
-def AnotherSchema { ... }
+def IdList [int...]
+
+def Enabled !true
 ```
 
 ### 2.2 Canonical Block Order
@@ -160,7 +172,7 @@ The `meta` block contains **document-level metadata**.
 
 ```jssn
 meta {
-  jssn_version: "0.1"
+  jssn_version: "0.2"
   title: "Example"
   description: "..."
 }
@@ -242,28 +254,49 @@ A format alias is an inline alias and is always inline-expanded.
 
 ## 5. Def Block
 
-Each `def <Name> { ... }` defines a reusable object definition in JSSN.  
+Each `def <Name> <TypeExpr>` defines a reusable named type in JSSN.  
 When emitted to JSON Schema, each `def` is represented as a named entry under `$defs`.
 
 > A `def` block is a **type producer**.  
-> It introduces a named object type that may be referenced by name in other type expressions.
+> It introduces a named type that may be referenced by name in other type expressions.
+>
+> The `<TypeExpr>` of a `def` may be **any valid type expression**.
+> If `<TypeExpr>` is an **object type**, it is written using `{ ... }` (block form).
+> If `<TypeExpr>` is an **array or tuple type**, it is written using `[ ... ]` (block form).
+> All other types (scalar, union, enum, literal) are written inline on the same line as the `def` header.
 
 The document entry is selected via `meta.entry` (or by the implicit single-definition rule) and determines which definition becomes the **entry schema** in the emitted JSON Schema.
 
 ### 5.1 Purpose
 
-A `def` block defines exactly one **named object definition**.
+A `def` block defines exactly one **named type definition**, which may be any valid type expression (object, array, scalar, union, enum, or literal).
 
 ```jssn
 def CaseSnapshot {
   ...
 }
+
+def IdList [int...]
+
+def Enabled !true
+```
+
+Additional examples:
+
+```jssn
+def Flags [bool...]
+
+def Mode "AUTO" | "MANUAL"
+
+def Count int(0..10)
 ```
 
 ### 5.2 Rules
 
 - Named identifiers MUST be globally unique within the document (see §4.1): schema names and type alias names (`Name = ...`) share a single namespace.
-- Def blocks define object structure only.
+- Def blocks define a named type, which may be any valid type expression.
+- If the type is an object, it is written in block form `{ ... }` or as a field list (object shorthand).
+- Non-object types MUST be written as a single inline type expression following the `def <Name>` header.
 - Type producer declarations are NOT allowed inside def blocks.
 
 ### 5.3 Def References (New)
@@ -284,7 +317,7 @@ def CaseSnapshot {
 
 Mapping intention:
 
-- Each `def <Name> { ... }` is emitted as a named schema definition (e.g., under JSON Schema `$defs`).
+- Each `def <Name> <TypeExpr>` is emitted as a named schema definition (e.g., under JSON Schema `$defs`).
 - References to `<Name>` are emitted as `$ref` to that definition.
 
 Because `def` blocks are type producers, references to `<Name>` always refer to the produced type, never to the declaration itself.
@@ -297,7 +330,7 @@ Notes:
 
 > The JSSN document entry and the JSON Schema entry schema are conceptually identical; the difference lies only in representation (JSSN metadata vs emitted `$ref`).
 
-Emission note (normative): Tooling MUST emit all `def <Name> { ... }` blocks as named definitions under JSON Schema `$defs`. The entry schema (determined by §3.4) MUST be emitted as a top-level `$ref` to `#/$defs/<EntryName>`.
+Emission note (normative): Tooling MUST emit all `def <Name> <TypeExpr>` blocks as named definitions under JSON Schema `$defs`. The entry schema (determined by §3.4) MUST be emitted as a top-level `$ref` to `#/$defs/<EntryName>`.
 
 > Only `def <Name>` declarations produce `$defs` entries.  
 > Inline aliases never do.
@@ -321,7 +354,7 @@ A **type producer** is a declaration construct that introduces a **named type** 
 In JSSN v0.1, the following constructs are type producers:
 
 - inline alias declarations (`Name = Expr` inside `inline {}`)
-- def block declarations (`def <Name> { ... }`)
+- def declarations (`def <Name> <TypeExpr>`)
 
 Type producers do not appear directly in field positions; their produced names do.
 
@@ -986,8 +1019,6 @@ Rules:
 - At most one constant literal argument is allowed.
 - The argument list in `T(...)` is shared with existing constraints/format/enum arguments.
 
-The legacy form `Type = !literal` is NOT part of JSSN v0.1 and is invalid.
-
 ### 6.8.2 Allowed Literals
 
 The following literal kinds are supported:
@@ -1068,7 +1099,14 @@ def CaseSnapshot {
 
 Notes:
 
-- If the same annotation key appears at multiple placements (e.g., inline-alias and field-level), field-level annotations take precedence for emission. See §4.5 for rules.
+- If the same annotation key appears at multiple placements (e.g., inline-alias and field-level),
+  field-level annotations take precedence for emission. See §4.5 for rules.
+- For `def` blocks whose type expression is written in **block form** (`{ ... }` for objects,
+  `[ ... ]` for arrays or tuples), def-level annotations MAY appear either:
+  - in the `def <Name>` header, or
+  - after the closing block.
+- For `def` blocks whose type expression is written **inline** (scalar, union, enum, or literal),
+  def-level annotations MAY appear **only in the header**.
 
 ### Annotation Shorthand Forms
 
@@ -1222,20 +1260,19 @@ The default MAY be redundant but SHOULD be preserved for documentation and futur
 - Object and array defaults MUST use constant literal forms:
   - `@~!{ ... }`
   - `@~![ ... ]`
-- The legacy syntax `~literal` is invalid in JSSN v0.1.
 
 ---
 
 ## 6.10 Literal Types (Inline Block)
 
-Within the `inline` block, a type alias declaration (`Name = ...`) MAY be assigned either (a) a literal JSON value, or (b) a typed-const type expression `T(..., !literal)`. These declare **literal types**.
+Within the `inline` block, a type alias declaration (`Name = ...`) MAY declare a **literal type** using the constant-literal prefix `!`, or a **typed constant** using `T(..., !literal)`. Literal types emit JSON Schema `const`.
 
 ```jssn
 inline {
-  SingleValue = "a"
-  Answer = 42
-  Enabled = true
-  Nothing = null
+  SingleValue = !"a"
+  Answer = !42
+  Enabled = !true
+  Nothing = !null
   Pair = ![1, 2]
   Config = !{ a: 1, b: 2 }
   OneInt = int(!1)
@@ -1250,12 +1287,12 @@ Semantics:
 
 Mapping intention (JSON Schema):
 
-- `Name = <literal>` → `{ "const": <literal> }`
+- `Name = !<literal>` → `{ "const": <literal> }`
 - `Name = T(..., !literal)` → `{ "type": <T>, ...constraints/format/enum..., "const": <literal> }`
 
 Notes:
 
-- String literals MUST be quoted.
+- String literal constants MUST be written as `!"..."` (quoted string literal prefixed with `!`).
 - Object and array literal types MUST use the leading `!` (e.g., `![...]`, `!{...}`).
 - Object and array literals MUST use `!{}` / `![]` to avoid ambiguity with type expressions.
 - Literal types are distinct from enum constraints; enum blocks with a single element MUST canonicalize to a literal type.
@@ -1718,11 +1755,53 @@ Canonical rules:
 - `@X` MAY be accepted as an input alias of `@deprecated`.
 - Canonical output MUST emit `@deprecated` (never `@X`).
 
-### 8.8 Named Type Reference Canonicalization
+### 8.8 Def Block Canonicalization
 
-- References to type aliases are written as bare `Name` and are always inline-expanded at emission time.
+Def blocks define named reusable types and have a canonical structural form.
 
-Because usage syntax is identical, canonicalization MUST NOT rewrite references. The declaration form is the single source of truth.
+Canonical rules:
+
+- A `def` block MUST be emitted using the form:
+
+  def <Name> <TypeExpr>
+
+  where `<TypeExpr>` is a single type expression.
+
+- If the defined type is an object, the canonical form MUST use an object literal:
+
+  def <Name> {
+  ...
+  }
+
+- If the defined type is an array, scalar, union, enum, or literal, the canonical form MUST place the type expression on the same line as the `def` header.
+
+  Examples (canonical):
+
+  def Flags [bool...]
+  def Enabled bool
+  def Disabled !false
+  def Status (enum=["RUNNING", "ENDED"])
+  def Count int(0..5)
+  def FixedCount int(!3)
+
+- Canonical output SHOULD place the type expression immediately after `<Name>` without introducing an extra block level.
+
+- A `def` block MUST NOT omit the leading `!` for constant literals.
+  For example:
+
+  def Invalid false
+
+  is invalid and MUST NOT appear in canonical output.
+
+- Canonicalization MUST NOT rewrite a `def` into an inline alias or vice versa.
+  Whether a named type is inline-expanded or emitted via `$defs` is determined solely by the declaration kind, not by usage.
+
+### 8.9 Named Type Reference Canonicalization
+
+- References to **inline aliases** are written as bare `Name` and are always inline-expanded at emission time.
+- References to **defs** are written as bare `Name` and are emitted as `$ref` to `#/$defs/Name`.
+
+Because usage syntax is identical, canonicalization MUST NOT rewrite references. The declaration form (inline vs def) is the single source of truth for whether emission expands inline or emits `$ref`.
 
 ## 9. Invalid Schemas (Normative)
 
@@ -1885,7 +1964,7 @@ Declared via:
 
 ```jssn
 meta {
-  jssn_version: "0.1"
+  jssn_version: "0.2"
 }
 ```
 
@@ -1894,6 +1973,16 @@ The `jssn_version` key is required (see §3.4).
 ### 10.2 Compatibility Policy
 
 Backward compatibility and deprecation rules are TBD.
+
+### 10.3 Changes in v0.2 (Non-normative)
+
+JSSN v0.2 introduces the following changes compared to v0.1:
+
+- Renamed top-level blocks (`type` → `inline`, `schema` → `def`)
+- Generalized `def` blocks to allow non-object type expressions
+- Clarified block vs inline forms for object and array types
+- Refined annotation placement rules
+- Strengthened canonicalization rules for emission stability
 
 ---
 
