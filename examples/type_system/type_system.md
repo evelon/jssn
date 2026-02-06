@@ -1,12 +1,12 @@
 # Type System Showcase
 
-이 예시는 **JSSN 타입 표현력**을 간단히 보여주기 위한 예시다.
+이 예시는 **JSSN v0.2 타입 시스템의 핵심 표현력**을 간단히 보여주기 위한 예시다.
 
 목표:
 
 - primitive constraint
 - enum / literal
-- array vs tuple
+- array / tuple / typed tail
 - optional field
 - reusable type
 - open object (`...`)
@@ -24,31 +24,38 @@ SmallInt = int(0..9)
 UserId = str(uuid)
 ```
 
-숫자 범위와 format 제약을 간단히 표현할 수 있다.
+이러한 alias는 사용 시 inline 으로 확장되며 JSON Schema에는 별도의 이름으로 남지 않는다.
 
 ---
 
-### Enum and literal
+### Enum, literal, and union
 
 ```jssn
-Status = enum: str { ACTIVE DISABLED BANNED }
-YesNo = “YES” | “NO”
+Status = enum: str {
+  ACTIVE
+  DISABLED
+  BANNED
+}
+
+YesNo = "YES" | "NO"
 ```
 
-- `enum:` → JSON Schema enum으로 emit
-- literal union → 일반 union (enum으로 자동 canonicalize되지 않음)
+- `enum block form`은 JSON Schema의 `enum`으로 변환된다.
+- 문자열 literal의 union (`"YES" | "NO"`)은 일반 union이며 enum으로 canonicalize되지 않는다.
 
 ---
 
 ### Arrays
 
 ```jssn
-tags: [str...]
-scores: (1..5)[int...]
+tags: []str
+scores: [](1..5)int
+matrix: [](3)[](2..4)int
 ```
 
-- `[T...]` → homogeneous array
-- `(1..5)[T...]` → length constraint
+- 배열은 **prefix 형태 `[]Type`** 로 표현한다.
+- 길이 제약은 `[]` 바로 뒤에 `(min..max)` 형태로 붙는다.
+- prefix 표기는 중첩 배열에서도 읽기 쉬운 구조를 유지한다.
 
 ---
 
@@ -56,34 +63,37 @@ scores: (1..5)[int...]
 
 ```jssn
 pair: [str, int]
-open_pair: [str, int, ...]
-typed_tail: [str, int, SmallInt...]
+open_any_tail: [str, int, ...]
+typed_tail: [str, int, ...SmallInt]
+typed_tail_len: [str, int, ...(1..3)SmallInt]
 ```
 
-- fixed tuple
-- open tuple
-- typed tail tuple
+- 고정 길이 tuple
+- 열린 tuple (tail이 any)
+- 타입이 지정된 tail tuple
+- tail 반복 개수에 대한 길이 제약
 
 ---
 
 ### Object shape
 
 ```jssn
-profile: {
-    name: str(1..20)
-    age?: int(0..150)
-    email?: str(email)
-    ...
+profile: obj {
+  name: str(1..20)
+  age?: int(0..150)
+  email?: str(email)
+  ...
 }
 ```
 
-- 기본 required
-- `?` → optional
-- `...` → additionalProperties 허용
+- object는 `obj {}` 형태 사용을 권장한다 (`{}` 도 허용).
+- 필드는 기본적으로 required.
+- `?` 는 optional field를 의미한다.
+- `...` 는 additional properties 허용을 의미한다.
 
 ---
 
-이 예시는 JSSN의 모든 기능을 보여주기 위한 것이 아니라,
+이 예시는 JSSN의 모든 문법을 나열하기 위한 것이 아니라,
 
 > JSON Schema를 사람이 읽기 좋은 형태로 작성할 수 있다
 

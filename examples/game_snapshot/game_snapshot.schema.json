@@ -10,6 +10,10 @@
       "type": "string",
       "format": "uuid"
     },
+    "PhaseId": {
+      "type": "string",
+      "format": "uuid"
+    },
     "SeatNo": {
       "type": "integer",
       "minimum": 0,
@@ -51,10 +55,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "phase_id": {
-          "type": "string",
-          "format": "uuid"
-        },
+        "phase_id": { "$ref": "#/$defs/PhaseId" },
         "type": { "$ref": "#/$defs/PhaseType" },
         "round": {
           "type": "integer",

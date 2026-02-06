@@ -7,6 +7,7 @@
 - Pagination
 - query object (선택 필드 + open object)
 - enum / format / 길이/범위 제약
+- open object (`...`) 패턴
 
 > `ApiContract`는 “예제 묶음”을 위해 만든 루트 schema다. 실제 사용에서는 endpoint별로 entry를 나누거나, 한 entry에서 components처럼 참조해도 된다.
 
@@ -15,7 +16,7 @@
 ## Files
 
 - `api_contract.jssn`: JSSN 원본
-- (선택) `api_contract.schema.json`: JSON Schema 생성 결과를 넣고 싶으면 나중에 추가
+- (선택) `api_contract.schema.json`: JSSN → JSON Schema 변환 결과(예: OpenAPI components/schemas)
 
 ---
 
@@ -58,6 +59,25 @@
   }
 }
 ```
+
+### 3-2) ErrorResponse with details + extra fields (open object)
+
+```json
+{
+  "error": {
+    "code": "INVALID_ARGUMENT",
+    "message": "email is invalid",
+    "details": {
+      "field": "email",
+      "hint": "must be a valid email address"
+    },
+    "extra": "ignored by schema?",
+    "request_id": "req_01HZYQ8F6T0WQ1YQW8FQ2W7K3Z"
+  }
+}
+```
+
+> `error` 객체는 `...`로 open 이므로, `extra` 같은 추가 필드도 허용된다.
 
 ### 4) GET /users — ListUsersQuery (as JSON-like object)
 
@@ -108,5 +128,6 @@
 ## **Notes**
 
 - object는 기본적으로 closed(`additionalProperties: false`)로 emit되는 것이 목표다. 필요한 곳에서만 ...로 open.
-- `ErrorResponse.error.details`는 `*: str` + `...`로 “키는 자유, 값은 string” 패턴을 표현했다.
+- `ErrorResponse.error.details`는 `...: str(1..200)`로 “키는 자유, 값은 string” 패턴을 표현했다.
 - query는 실제로는 querystring이지만, 타입 레벨에선 object로 정의하는 편이 구현/검증에 유리하다.
+- `ListUsersQuery`는 query object 자체도 `...`로 open 이므로, 실서비스에서 필터 옵션이 늘어나도 스키마 변경 없이 확장할 수 있다.

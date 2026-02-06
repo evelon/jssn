@@ -1,56 +1,81 @@
 meta {
-  jssn_version: "0.1"
+  jssn_version: "0.2"
   entry: TypeShowcase
 }
 
-type {
-  // primitive constraints
+inline {
+  // primitive constraints + format
   SmallInt = int(0..9)
   UserId = str(uuid)
 
-  // enum types
+  // enum block form (named enum via inline alias; expands inline at use sites)
   Status = enum: str {
     ACTIVE
     DISABLED
     BANNED
   }
 
-  // literal / union
+  // union vs enum (this is a union; it is NOT canonicalized into enum)
   YesNo = "YES" | "NO"
 
-  // inline-only reusable
-  TinyCount ^= int(0..3)
+  // typed const (const shares the same constraint/format parentheses)
+  RetryOnce = int(!1)
+
+  // another small reusable inline alias
+  TinyCount = int(0..3)
 }
 
-schema TypeShowcase {
-  id: UserId
+# def: reusable schema definitions (emitted under $defs in JSON Schema)
 
-  status: Status
+def UserStatus enum: str {
+  ACTIVE
+  DISABLED
+  BANNED
+}
+
+def Tag []str
+
+def EnabledFlag !true
+
+def TypeShowcase obj {
+  # basic scalars
+  id: UserId
+  score: SmallInt
+  retry: RetryOnce
+
+  # enum vs union
+  status_inline: Status
+  status_def: UserStatus
   flag: YesNo
 
-  score: SmallInt
-  retry: TinyCount
+  # inline alias reuse
+  tiny: TinyCount
 
-  // arrays
-  tags: [str...]
-  scores: (1..5)[int...]
+  # arrays (prefix form; length constraint comes immediately after [])
+  tags: []str
+  scores: [](1..5)int
+  matrix: [](3)[](2..4)int
 
-  // tuples
+  # tuples
   pair: [str, int]
-  open_pair: [str, int, ...]
-  typed_tail: [str, int, SmallInt...]
+  open_any_tail: [str, int, ...]
+  typed_tail: [str, int, ...SmallInt]
+  typed_tail_len: [str, int, ...(1..3)SmallInt]
 
-  // object shapes
-  profile: {
+  # object shapes (obj {} is recommended; {} is also allowed)
+  profile: obj {
     name: str(1..20)
     age?: int(0..150)
     email?: str(email)
     ...
   }
 
-  metadata?: {
+  metadata?: obj {
     created_at: str(date-time)
     updated_at?: str(date-time)
     ...
   }
+
+  # const via def
+  enabled_by_default: EnabledFlag
 }

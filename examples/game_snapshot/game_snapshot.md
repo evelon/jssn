@@ -1,6 +1,6 @@
 # Game Snapshot (JSSN Example)
 
-이 폴더는 **JSSN v0.1**로 작성한 `game_snapshot.jssn` 예시를 보여준다.
+이 폴더는 **JSSN v0.2**로 작성한 `game_snapshot.jssn` 예시를 보여준다.
 
 - 목적: 게임 진행 상태를 한 번에 내려주는 **snapshot payload**를 스키마로 정의
 - 포인트: nested object, `$defs/$ref` 재사용 타입, enum, optional(`?`) 필드, 배열/오브젝트 조합
@@ -82,13 +82,6 @@
   }
 }
 ```
-
----
-
-## Notes
-
-- `players`는 `[Player...]`이므로 빈 배열도 가능하지만, 실제 스냅샷에서는 보통 1명 이상이 된다.
-- `opened_at`은 `date-time` format(예: RFC 3339/ISO 8601) 문자열이다.
 
 ---
 
@@ -213,7 +206,7 @@
 
 ## Invalid Example
 
-아래 JSON은 **스키마 기준 invalid** 예시다.
+아래 JSON은 **JSSN 스키마 기준 invalid** 예시다.
 
 이 예시에서는 `seat` 값이 허용 범위(0..7)를 벗어나므로 validation에 실패해야 한다.
 

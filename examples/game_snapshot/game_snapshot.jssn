@@ -1,11 +1,12 @@
 meta {
-  jssn_version: "0.1"
+  jssn_version: "0.2"
   entry: GameSnapshot
 }
 
-type {
+inline {
   CaseId = str(uuid)
   PlayerId = str(uuid)
+  PhaseId = str(uuid)
   SeatNo = int(0..7)
   PhaseType = enum: str {
     NIGHT
@@ -27,7 +28,7 @@ type {
   }
 }
 
-schema Player {
+def Player {
   id: PlayerId
   seat: SeatNo
   name: str(1..20)
@@ -35,27 +36,27 @@ schema Player {
   eliminated?: bool
 }
 
-schema Phase {
-  phase_id: str(uuid)
+def Phase {
+  phase_id: PhaseId
   type: PhaseType
   round: int(0..)
   opened_at: str(date-time)
 }
 
-schema Vote {
+def Vote {
   type: VoteType
   from: SeatNo
   to: SeatNo
   weight: int(1..3)
 }
 
-schema Result {
+def Result {
   vote_type: VoteType
   targeted: SeatNo
   executed: bool
 }
 
-schema GameSnapshot {
+def GameSnapshot {
   schema_version: int(1..)
   case_state: {
     case_id: CaseId
@@ -63,7 +64,7 @@ schema GameSnapshot {
     round_no: int(0..)
   }
   phase_state: Phase
-  players: [Player...]
-  vote_meta?: [Vote...]
+  players: []Player
+  vote_meta?: []Vote
   vote_result?: Result
 }
