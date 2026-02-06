@@ -867,51 +867,135 @@ Tuple tail length constraints attach to the tail marker, not to the whole tuple.
 
 ## Enum
 
-JSSN supports two forms of enum declaration, which are semantically equivalent but differ in their usage and annotation capabilities:
+JSSN supports **enum constraints** as a way to restrict a value to a fixed set of literal JSON values.
 
-- **Expression Enum**: An enum appearing directly inside a type expression, such as `str(enum A|B)`, `int(enum=[1,2,3])`, or as a standalone parenthesized form `(enum A|2)`. Expression enums are used inline within type expressions and are not named.
-- **Defined Enum**: An enum introduced via a named type producer, such as a `def` or `inline` block, using the enum block syntax. Defined enums are reusable and may carry annotations. They are always named.
+This specification distinguishes enums along **two orthogonal axes**:
 
-> **Terminology Note:** The term “inline enum” is not normative and MUST NOT be used elsewhere in this specification. For clarity, this specification uses only “expression enum” and “defined enum”.
+1. **Syntax form** — how the enum is written
+2. **Naming / reuse** — whether the enum is produced as a named type
 
-Both forms emit equivalent JSON Schema `enum` constraints and are subject to the same canonicalization and value rules. Defined enums are preferred when reuse or annotation is required; expression enums are suitable for single-use or ad hoc constraints.
+To avoid ambiguity, the following terms are used consistently throughout this document:
 
-### Defined Enum Syntax
+- **expression enum** — an unnamed enum constraint written inline inside a type expression
+- **enum block form** — a block-style syntax for listing enum values
+- **named enum** — a reusable named type whose underlying type expression is an enum
 
-Defined enums are declared as named type aliases using the enum block form. This form is allowed only within the `inline` block or as the type expression of a `def`. The named alias may then be referenced elsewhere.
+### Quick Examples
+
+The following examples illustrate the three most common enum usage patterns.
+
+#### A. Unnamed Expression Enum (Inline, Non-reusable)
+
+```jssn
+status: str(enum RUNNING|ENDED)
+```
+
+- Used directly at a field site.
+- Emits a JSON Schema `enum`.
+- Cannot be referenced or reused elsewhere.
+
+---
+
+#### B. Named Inline Enum (Inline Alias)
 
 ```jssn
 inline {
-  VoteKind = enum: str {
-    FIRST_VOTE
-    "SECOND VOTE"
-    "INTERRUPTED"
+  Status = enum: str {
+    RUNNING
+    ENDED
+    "ON HOLD"
   }
+}
+
+def Snapshot {
+  status: Status
+}
+```
+
+- Defines a reusable enum name for readability.
+- The enum is **expanded inline** at each usage site.
+- No `$defs` entry is produced.
+
+---
+
+#### C. Named Defined Enum (`def`)
+
+```jssn
+def Status enum: str {
+  RUNNING
+  ENDED
+  "ON HOLD"
+}
+
+def Snapshot {
+  status: Status
+}
+```
+
+- Defines a reusable enum as a schema-level definition.
+- Emits a `$defs.Status` entry in JSON Schema.
+- References are emitted using `$ref`.
+
+---
+
+### Enum Syntax Forms
+
+#### Expression Enum
+
+An **expression enum** is an enum constraint written directly inside a type expression.
+
+Expression enums are unnamed and are used inline.
+
+Examples:
+
+```jssn
+str(enum A|B)
+int(enum 1|2|3)
+(enum A|2)
+str(enum=["A", "B", "C"])
+(enum=["ANY", 2])
+```
+
+Rules:
+
+- Expression enums MAY appear anywhere a type expression is allowed.
+- Expression enums are NOT named and are NOT reusable.
+- Expression enums MAY be type-qualified (`str(enum ...)`, `int(enum ...)`) or type-less (`(enum ...)`).
+- Type-less expression enums MUST be parenthesized.
+- In type-less expression enums, bare identifiers are interpreted as string literals.
+
+---
+
+#### Enum Block Form
+
+The **enum block form** is a block-style syntax for declaring enum values.
+
+```jssn
+enum: str {
+  A
+  B
+  "C VALUE"
 }
 ```
 
 Rules:
 
-- Defined enum (enum block) syntax is allowed ONLY inside the `inline` block or as a `def` type expression.
-- Defined enums MUST NOT appear within field positions except as a named reference.
-- The declared enum becomes a named type alias and may be referenced like any other type.
-- The base type (`str`, `int`, etc.) determines the JSON Schema type.
-- Enum elements represent literal JSON values and are emitted as JSON Schema `enum`.
-- Expression enum syntax (e.g., `str(enum ...)` or `(enum ...)`) MUST NOT be used inside `inline { ... }` or as the type expression of a defined enum. Use the enum block syntax instead.
-- Canonicalization: If a defined enum contains exactly one element, canonical output MUST replace the enum block with a literal type alias (see §6.10).
+- Enum block form is a **syntax form only**.
+- Enum block form MUST NOT appear directly in field positions.
+- Enum block form is allowed ONLY as:
+  - the right-hand side of an inline alias declaration, or
+  - the `<TypeExpr>` of a `def` declaration.
 
-### Enum Value Rules
+The enum block form exists to improve readability for large or annotated enums.
 
-Enum elements represent literal JSON values.
+---
 
-For `str` enums:
+### Named Enums
 
-- Bare identifiers are allowed and are interpreted as string literals.
-  - `RUNNING` → `"RUNNING"`
-- Quoted string literals are also allowed.
-  - `"SECOND VOTE"`
-- Bare identifiers inside enum blocks are treated as string values only.
-  - They are NOT JSSN identifiers and do NOT participate in the global namespace.
+A **named enum** is a named type whose underlying type expression is an enum  
+(either an expression enum or an enum block form).
+
+Named enums are **type producers** and may be reused by name.
 
 Examples:
 
@@ -923,65 +1007,108 @@ inline {
     "ON HOLD"
   }
 }
+
+def Mode (enum=["AUTO", "MANUAL"])
 ```
+
+Rules:
+
+- Named enums MAY be declared using either:
+  - enum block form, or
+  - expression enum syntax.
+- Named enums MAY carry annotations.
+- Whether a named enum is inline-expanded or emitted via `$defs`
+  depends solely on whether it is declared in `inline {}` or as a `def`.
+
+---
+
+### Enum Value Rules
+
+Enum elements represent **literal JSON values**.
+
+#### String Enums
+
+For string enums:
+
+- Bare identifiers are allowed and are interpreted as string literals.
+  - `RUNNING` → `"RUNNING"`
+- Quoted string literals are also allowed.
+  - `"SECOND VOTE"`
+- Bare identifiers inside enum blocks are treated as **string values only**.
+  - They are NOT JSSN identifiers and do NOT participate in the global namespace.
+
+Example:
+
+```jssn
+inline {
+  Status = enum: str {
+    RUNNING
+    ENDED
+    "ON HOLD"
+  }
+}
+```
+
+#### Non-String Enums
 
 For non-string enums:
 
 - Values MUST be valid JSON literals of the declared base type.
 
 ```jssn
-inline {
-  RetryCount = enum: int {
-    1
-    2
-    3
-  }
+def RetryCount enum: int {
+  1
+  2
+  3
 }
 ```
 
-Object and array enum values MUST use constant literal syntax (`!{}` / `![]`) to avoid ambiguity with type expressions.
+#### Object and Array Enum Values
+
+Object and array enum values MUST use constant literal syntax:
 
 ```jssn
-inline {
-  ConfigVariant = enum: obj {
-    !{ a: 1 }
-    !{ a: 2 }
-  }
+def ConfigVariant enum: obj {
+  !{ a: 1 }
+  !{ a: 2 }
 }
 ```
 
-Restrictions:
+This avoids ambiguity with type expressions.
 
-- Enum elements MUST be literal values only.
-- Enum elements MUST NOT include type expressions or constraints.
-- If type-specific constraints per value are needed, authors MUST use union types with constant literals instead.
+---
 
-### Expression Enum Forms
+### Enum vs Literal vs Union
 
-**Expression enums** are enums that appear directly inside type expressions, either as a constraint on a base type or as a standalone type. Examples:
+Enum constraints, constant literal, and union are **semantically distinct constructs**.
 
-```jssn
-str(enum A|B|C)
-str(enum=["A","B","C"])
-int(enum 1|2|3)
-int(enum=[1,2,3])
-(enum A|2)
-(enum=["ANY", 2])
-```
+- **Enum**
+  - Represents membership in a closed value set
+  - Emitted using JSON Schema `enum`
+- **Constant Literal**
+  - Fixes the value to exactly one literal
+  - Emitted using JSON Schema `const`
+- **Union**
+  - Represents type-level alternatives
+  - Emitted using JSON Schema `anyOf`
 
-- Type-less expression enums are allowed using `(enum ...)` as a standalone type expression. Parentheses are REQUIRED to avoid ambiguity with other forms.
-- In this form, the element literals determine the allowed JSON values and tooling emits JSON Schema `enum` without an explicit `inline` or alias name.
-- In type-less expression enums, bare identifiers are interpreted as string literals (e.g., `ANY` → `"ANY"`).
+These constructs MUST NOT be normalized into one another except where explicitly required by canonicalization rules.
 
-### Notes
+---
 
-- Both expression enums and defined enums MAY contain any JSON literal values supported by JSON Schema `enum` (string, number/integer, boolean, null, object, array).
-- The `enum A|B|C` form and the `enum=[...]` form are equivalent; the `A|B|C` form is syntactic sugar.
-- These map directly to JSON Schema `enum`.
-- Canonical enum normalization is defined in §8.2 and tooling MUST enforce it.
-- Expression enum canonicalization preserves value order (no sorting); see §8.2.
+### Canonicalization Rules (Enum-Specific)
 
-Expression enums and defined enums are semantically equivalent. Both MUST emit JSON Schema `enum`. Defined enums are recommended when enum values are numerous, long, or require reuse or annotation.
+- Canonical output MUST use the array form: `enum=[...]`
+- Bar-separated forms (`enum A|B|C`) are input sugar only.
+- Enum value order MUST be preserved (stable).
+- Duplicate enum values MUST be removed, preserving first occurrence.
+- Single-value enums MUST be canonicalized to constant literals:
+  - `str(enum=["A"])` → `str(!"A")`
+  - `(enum=[2])` → `!2`
+- An enum block form used as a named enum, if it contains a single value,
+  MUST canonicalize to a literal type alias.
+
+---
 
 ---
 
@@ -1599,7 +1726,7 @@ Canonical output rules:
     - `int(enum=[3])` → `int(!3)`
   - If the enum is type-less, canonical output MUST emit an untyped constant literal:
     - `(enum=["A"])` → `!"A"`
-- Type-block enum blocks are canonicalized separately: a single-value enum block MUST be emitted as a literal type alias (see §6.10).
+- Enum block forms used in named enums are canonicalized separately: a single-value enum block MUST be emitted as a literal type alias (see §6.10).
 
 ---
 
