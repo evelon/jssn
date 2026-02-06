@@ -2171,3 +2171,4 @@ They are reserved for future versions and may evolve independently of the core l
 - Import / module system
 - Multi-file bundling strategy
 - External schema referencing conventions
+- Namespace
