@@ -44,11 +44,7 @@ Unless otherwise noted, the JSON Schema emission described in this document targ
 
 - JSSN is a **schema-first DSL** designed for humans.
 - JSSN is a **source format** that can be transformed into JSON Schema.
-- JSSN separates the following concerns explicitly:
-- **inline aliases** (data kind)
-  - **constraint** (range, length, size)
-  - **format** (semantic hint such as uuid, email, date-time)
-  - **metadata** (documentation, ownership, stability)
+- JSSN separates concerns such as data kind, constraint, format, and metadata explicitly.
 - Every construct in JSSN MUST be either:
   - directly representable in JSON Schema, or
   - reducible to a JSON Schema–representable construct via desugaring.
@@ -73,11 +69,6 @@ These notes are non-normative and do not change validation semantics.
   - and long-term maintainability of schema documents.
 - JSSN intentionally avoids introducing constructs that cannot be faithfully emitted as JSON Schema.
 - Where JSON Schema provides multiple equivalent encodings, JSSN selects a canonical representation to reduce ambiguity.
-
-Inline aliases and `def` blocks introduce **named types**, but are not themselves type expressions.
-
-> JSSN deliberately avoids exposing JSON Schema–specific concepts (such as `$defs` vs inline expansion) in author-facing syntax.  
-> Inline aliases are always expanded structurally, while reusable schema boundaries are expressed explicitly via `def` blocks.
 
 ---
 
@@ -616,21 +607,101 @@ Notes:
 
 JSSN distinguishes **homogeneous arrays** from **tuple-shaped arrays**.
 
-#### Homogeneous Arrays
+#### Homogeneous Arrays (Prefix-Only)
 
-Homogeneous arrays are written using the `T...` suffix inside brackets:
+Homogeneous arrays are written using the **prefix array operator**: `[]`.
 
-```jssn
-[T...]
-```
+- The array type is formed as `[]T`, where the brackets `[]` immediately precede a single type expression `T`.
+- The `[]` operator binds only to the immediately following single type expression.
+- The postfix form `T[]` and postfix length forms are **invalid** in JSSN and MUST NOT be used.
+
+**Array Length Constraints:**
+
+- To constrain length, attach immediately after `[]`:
+  - `[](min..max)T` — array length constrained to min..max (inclusive).
+  - `[](n)T` — array length exactly `n`.
+  - Keyed length constraints are also allowed:
+    - `[](min=..., max=...)T`
+    - `[](min=...)T`
+    - `[](max=...)T`
+  - Canonicalization for keyed → range:
+    - `min=1,max=2` → `(1..2)`
+    - `min=1` → `(1..)`
+    - `max=2` → `(..2)`
+    - `min=max=n` → `(n)`
+
+- The length constraint attaches directly after `[]` and before the element type.
+- The `[]` operator and its length constraint always apply only to the immediately following type expression.
+
+**Union Rule for Arrays:**
+
+- If the element type is a union, **parentheses are REQUIRED** around the union type.
+  - Valid: `[](int | str)`
+  - Invalid: `[]int | str` (this would be parsed as an array of `int`, unioned with `str`)
+- The union operator `|` has lower precedence than the array operator `[]`.
 
 Semantics:
 
 - All items MUST satisfy `T`.
+- If a length constraint is present, array length MUST be within the specified bounds.
 
 Mapping intention (JSON Schema):
 
 - `items: schema(T)`
+- Length constraints map to `minItems`/`maxItems`:
+  - `minItems = min`
+  - `maxItems = max`
+
+**Examples:**
+
+```jssn
+[]int
+[]str(5..30)
+[](uuid | null)
+[](int | str)
+[](str(enum=["A", "B"]))
+[](2..4)int
+[](min=1, max=3)str
+[](3)(int | str)
+```
+
+Multiline example:
+
+```jssn
+[]{
+  id: int
+  name: str
+}
+```
+
+**Nested array with length:**
+
+```jssn
+[](3)[](2..4)T
+```
+
+with strings,
+
+```jssn
+[](3)[](2..4)str(4..6)
+```
+
+##### Rationale (Non-normative)
+
+JSSN places array length constraints **immediately after the `[]` prefix** (as in `[](2..4)T`) and forbids postfix array or length forms. This avoids ambiguity and excessive parentheses when working with complex element types or nested arrays.
+
+If JSSN allowed postfix length constraints (e.g. `[]T(2..4)`), then nested or parenthesized types would require excessive parentheses to clarify binding. For example, to express an array of strings of length 2..4, length-constrained, you would have to write something like:
+
+```jssn
+([](str(4..6)))(2..4)
+```
+
+Prefixing length after `[]` keeps the operator and its modifiers together, and improves readability for nested arrays:
+
+- Postfix: `[][]T(2..4)(3)`
+- Prefix: `[](3)[](2..4)T`
+
+Therefore, only the prefix form `[]`, with length constraints directly after `[]`, is allowed. Postfix `T[]` and postfix length forms are invalid.
 
 #### Tuple-Shaped Arrays (Tuples)
 
@@ -664,88 +735,76 @@ Canonical shorthand:
 [T1, T2, ...]
 ```
 
-This is equivalent to:
-
-```jssn
-[T1, T2, any...]
-```
+- `[T1, ...]` is also allowed (a tuple with a single required prefix and an open tail).
 
 Semantics:
 
-- The array MUST have at least 2 items.
-- The first items MUST satisfy `T1`, `T2`.
+- The array MUST have at least as many items as the fixed prefix.
+- The first items MUST satisfy the fixed types.
 - Additional items MAY be any JSON value.
 
 Mapping intention (JSON Schema 2020-12):
 
 - `prefixItems: [schema(T1), schema(T2)]`
 - `items: {}`
-- `minItems = 2`
+- `minItems = prefixLen`
 
-##### Tail-Repeating Tuples
+##### Tail-Typed Open Tuples
 
-Tuples MAY specify a repeating tail item type.
+Tuples MAY specify a typed tail, requiring all additional items to match a type.
 
 ```jssn
-[T1, T2, T...]
+[T1, T2, ...T]
 ```
 
 Semantics:
 
-- The array MUST have at least 2 items.
-- The first items MUST satisfy `T1`, `T2`.
+- The array MUST have at least as many items as the fixed prefix.
+- The first items MUST satisfy each `Ti`.
 - Additional items MUST satisfy `T`.
 
 Mapping intention (JSON Schema 2020-12):
 
 - `prefixItems: [schema(T1), schema(T2)]`
 - `items: schema(T)`
-- `minItems = 2`
+- `minItems = prefixLen`
 
-If the tail type is a union, it MUST be parenthesized:
+If the tail type is a union, it MUST be parenthesized and written as `...(A | B)` (no whitespace):
 
-```jssn
-[T1, T2, (A | B)...]
-```
+- `[T1, T2, ...(A | B)]` means the tail items must be of type `A | B`.
+- If `T` is a union, it MUST be parenthesized and written as `...(A | B)` (no whitespace).
 
-##### Note: `[T, ...]` vs `[T...]`
+Restrictions:
 
-- `[T, ...]` is an **open tuple** with a required first item `T` and an `any` tail.
-- `[T...]` is a **homogeneous array** where every item must satisfy `T`.
+- Typed tail requires at least one fixed prefix item; `[...T]` is invalid. Use `[]T` for homogeneous arrays.
+- Only one tail marker (`...` or `...T`) is allowed per tuple; both forms cannot appear together.
 
-#### Array Length Constraints
+##### Tuple Tail Length Constraints
 
-Array length constraints MAY be written either as a postfix on the array expression or as a prefix range.
+Tuple tail length constraints attach to the tail marker, not to the whole tuple.
 
-Allowed forms (equivalent):
+- **Any-tail open tuple tail count:**
+  - `[T1, T2, ...(2..5)]` means the tail has 2..5 items of `any` type.
+  - Mapping: `minItems = prefixLen + 2`, `maxItems = prefixLen + 5`, `items: {}`
+- **Typed tail count:**
+  - `[T1, T2, ...(2..4)T]` means the tail has 2..4 items of type `T`.
+  - `[T1, T2, ...(3)T]` means the tail has exactly 3 items of type `T`.
+  - Whitespace is discouraged between the tail count and the tail type.
+  - Mapping: `items: schema(T)`, `minItems = prefixLen + min`, `maxItems = prefixLen + max`
+- **Typed tail with union:**
+  - For a union tail with no count, write `[T1, T2, ...(A | B)]`.
+  - For a union tail with a count, write `[T1, T2, ...(2..4)(A | B)]`.
+  - If `T` is a union, it MUST be parenthesized and written as `...(A | B)` (no whitespace).
+- **Invalid cases:**
+  - Tail count with strict tuple (no tail marker) is invalid (e.g., `[T1, T2](2..5)` is invalid).
+  - Only one tail marker per tuple; `...` and `...T` cannot both appear.
+  - Typed tail with zero prefix is invalid; `[...T]` and `[(...)(A|B)]` with zero prefix are not allowed; use `[]T`.
 
-```jssn
-[T...](1..3)
-```
+##### Note: `[T, ...]` vs `[]T`
 
-```jssn
-(1..3)[T...]
-```
-
-The single-number shorthand is allowed:
-
-```jssn
-[T...](3)
-```
-
-```jssn
-(3)[T...]
-```
-
-Mapping intention (JSON Schema):
-
-- `(min..max)` maps to `minItems` / `maxItems`.
-- `(n)` maps to `minItems = maxItems = n`.
-
-Notes:
-
-- Length constraints apply to both homogeneous arrays and tuples.
-- Canonicalization rules for array length constraints are defined in §8.4.
+- `[]T`, `[](n)T`, `[](min..max)T` are homogeneous arrays.
+- `[T, ...]` is an open tuple with a required first item `T` and an `any` tail.
+- `[T, ...T]` is an open tuple with a required first item `T` and a typed tail.
 
 ---
 
@@ -1621,23 +1680,46 @@ For format-constrained spread keys, canonical output MUST use:
 
 ### 8.4 Array and Tuple Canonicalization
 
+This section defines the canonical surface forms for array and tuple type expressions.
+Canonicalization MUST follow the syntax and precedence rules defined in §6.2.
+
 #### Homogeneous Arrays
 
-Canonical form:
+Canonical form uses the **prefix array operator** `[]`.
 
 ```jssn
-[T...]
+[]T
 ```
 
-Canonical multi-line form:
+If a length constraint is present, it MUST appear immediately after `[]`:
 
 ```jssn
-[
-  T...
-]
+[](2..4)T
+[](3)T
+```
+
+Canonical multi-line form (for complex element types):
+
+```jssn
+[]{
+  field: int
+}
+```
+
+Rules:
+
+- Canonical output MUST NOT use postfix array forms (`T[]`).
+- Canonical output MUST NOT use postfix length constraints.
+- The `[]` operator always binds to exactly one following type expression.
+- If the element type is a union, it MUST be parenthesized:
+
+```jssn
+[](A | B)
 ```
 
 #### Strict Tuples (Default)
+
+Strict tuples list a fixed number of positional item types.
 
 Canonical single-line form:
 
@@ -1655,37 +1737,79 @@ Canonical multi-line form:
 ]
 ```
 
-Strict tuples have no additional elements beyond the listed positions.
+Strict tuples:
+
+- Have no tail marker.
+- Implicitly disallow additional items.
+- MUST NOT carry length constraints.
 
 #### Open Tuples (Any Tail)
 
-Canonical shorthand:
+Open tuples allow additional items of unrestricted type.
+
+Canonical form:
 
 ```jssn
 [T1, T2, ...]
 ```
 
-Canonical output MUST NOT emit `any...` when `...` is sufficient.
+Rules:
 
-#### Tail-Repeating Tuples
+- `...` indicates an open tail of type `any`.
+- Canonical output MUST NOT emit `any...`.
+- The tuple length is at least the prefix length.
+
+#### Typed Tail Tuples
+
+Tuples MAY specify a typed tail using `...T`.
 
 Canonical form:
 
 ```jssn
-[T1, T2, T...]
+[T1, T2, ...T]
 ```
 
 If the tail type is a union, it MUST be parenthesized:
 
 ```jssn
-[T1, T2, (A | B)...]
+[T1, T2, ...(A | B)]
 ```
 
-#### Array Length Constraints
+Rules:
 
-- Canonical output MUST use the **prefix** form for length constraints:
-  - `[X](1..3)` → `(1..3)[X]`
-  - `[X](3)` → `(3)[X]`
+- Typed tails require at least one fixed prefix item.
+- `[...T]` is invalid; use `[]T` for homogeneous arrays.
+- Only one tail marker (`...` or `...T`) is allowed.
+
+#### Tuple Tail Length Constraints
+
+Tuple length constraints apply **only to the tail**, never to the entire tuple.
+
+Any-tail open tuple:
+
+```jssn
+[T1, T2, ...(2..5)]
+```
+
+Typed tail with count:
+
+```jssn
+[T1, T2, ...(2..4)T]
+[T1, T2, ...(3)T]
+```
+
+Union tail with count:
+
+```jssn
+[T1, T2, ...(2..4)(A | B)]
+```
+
+Rules:
+
+- Tail length constraints MUST attach directly to `...`.
+- Whitespace between the count and the tail type is discouraged.
+- Strict tuples (without `...`) MUST NOT have length constraints.
+- Canonical output MUST NOT rewrite tuple forms into array forms or vice versa.
 
 ---
 
@@ -1976,12 +2100,18 @@ Backward compatibility and deprecation rules are TBD.
 
 ### 10.3 Changes in v0.2 (Non-normative)
 
-JSSN v0.2 introduces the following changes compared to v0.1:
-
 - Renamed top-level blocks (`type` → `inline`, `schema` → `def`)
-- Generalized `def` blocks to allow non-object type expressions
-- Clarified block vs inline forms for object and array types
-- Refined annotation placement rules
+- Generalized `def` blocks to allow any type expression (object, array, scalar, union, enum, literal)
+- Introduced a prefix-only array operator `[]` and forbade postfix array forms
+- Defined array length constraints as prefix modifiers attached directly after `[]`
+- Clearly distinguished homogeneous arrays from tuple-shaped arrays
+- Refined tuple syntax, including:
+  - strict tuples with fixed length
+  - open tuples with `...` (any tail)
+  - typed tail tuples using `...T`
+  - tail-only length constraints using `...(n)` and `...(min..max)`
+- Explicitly disallowed rewriting between array and tuple forms during canonicalization
+- Clarified annotation placement and precedence rules
 - Strengthened canonicalization rules for emission stability
 
 ---
