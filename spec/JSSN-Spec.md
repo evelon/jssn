@@ -386,6 +386,56 @@ Tooling MUST treat these forbidden identifiers case-insensitively.
 }
 ```
 
+A plain object type MAY be written directly using an object literal (`{ ... }`).
+However, authors SHOULD prefer the explicit `obj` form when the intent is to emphasize that the type is an object, or when object-level constraints (such as property count constraints) are applied.
+
+The following forms are semantically equivalent when no object-level constraints are present:
+
+- `{ ... }`
+- `obj { ... }`
+
+Tooling MUST treat these forms identically during emission.
+
+#### Object Length (Property Count Constraints)
+
+JSSN allows constraining the **number of properties** (length) in an object using the `obj(min..max)` form.
+
+- The syntax `obj(min..max)` constrains the property count to be between `min` and `max` (inclusive).
+- Object length refers to the **number of properties** present in the object, not the length of the key names.
+- Mapping to JSON Schema:
+  - `minProperties = min`
+  - `maxProperties = max`
+
+**Combining Object Length with Object Literals**
+
+- An object length constraint MAY prefix an object literal.
+- The allowed syntax is: `obj(range){ ... }`
+- Postfix object length forms (e.g., `{ ... }(1..5)`) MUST be invalid.
+
+**Examples:**
+
+```jssn
+obj(1..5){
+  id: int
+  name: str
+}
+```
+
+```jssn
+obj(0..){
+  ...
+}
+```
+
+**Distinction from Key Constraints**
+
+- `obj(1..5)` constrains the **property count** (number of properties in the object).
+- In contrast:
+  - `*(1..5): V` and
+  - `...(1..5): V`
+    constrain the **length of property names** (the string length of each key).
+- These constraints are orthogonal and MAY be combined within the same object type.
+
 ### Object — Header Entries (New)
 
 An object MAY start with **header entries** that apply to multiple properties.
@@ -810,9 +860,18 @@ Tuple tail length constraints attach to the tail marker, not to the whole tuple.
 
 ## 6.3 Enum
 
-### 6.3.1 Enum Block Syntax (Inline Block Only)
+JSSN supports two forms of enum declaration, which are semantically equivalent but differ in their usage and annotation capabilities:
 
-Enums MAY be declared as reusable types inside the `inline` block using a block form.
+- **Expression Enum**: An enum appearing directly inside a type expression, such as `str(enum A|B)`, `int(enum=[1,2,3])`, or as a standalone parenthesized form `(enum A|2)`. Expression enums are used inline within type expressions and are not named.
+- **Defined Enum**: An enum introduced via a named type producer, such as a `def` or `inline` block, using the enum block syntax. Defined enums are reusable and may carry annotations. They are always named.
+
+> **Terminology Note:** The term “inline enum” is not normative and MUST NOT be used elsewhere in this specification. For clarity, this specification uses only “expression enum” and “defined enum”.
+
+Both forms emit equivalent JSON Schema `enum` constraints and are subject to the same canonicalization and value rules. Defined enums are preferred when reuse or annotation is required; expression enums are suitable for single-use or ad hoc constraints.
+
+### 6.3.1 Defined Enum Syntax
+
+Defined enums are declared as named type aliases using the enum block form. This form is allowed only within the `inline` block or as the type expression of a `def`. The named alias may then be referenced elsewhere.
 
 ```jssn
 inline {
@@ -826,13 +885,13 @@ inline {
 
 Rules:
 
-- Enum block syntax is allowed ONLY inside the `inline` block.
-- Enum blocks MUST NOT appear inline inside `def` fields.
+- Defined enum (enum block) syntax is allowed ONLY inside the `inline` block or as a `def` type expression.
+- Defined enums MUST NOT appear within field positions except as a named reference.
 - The declared enum becomes a named type alias and may be referenced like any other type.
 - The base type (`str`, `int`, etc.) determines the JSON Schema type.
 - Enum elements represent literal JSON values and are emitted as JSON Schema `enum`.
-- Inline enum syntax (e.g., `str(enum ...)`) MUST NOT be used inside `inline { ... }`. Use enum blocks instead.
-- Canonicalization: If an enum block contains exactly one element, canonical output MUST replace the enum block with a literal type alias (see §6.10).
+- Expression enum syntax (e.g., `str(enum ...)` or `(enum ...)`) MUST NOT be used inside `inline { ... }` or as the type expression of a defined enum. Use the enum block syntax instead.
+- Canonicalization: If a defined enum contains exactly one element, canonical output MUST replace the enum block with a literal type alias (see §6.10).
 
 ### 6.3.2 Enum Value Rules
 
@@ -890,7 +949,9 @@ Restrictions:
 - Enum elements MUST NOT include type expressions or constraints.
 - If type-specific constraints per value are needed, authors MUST use union types with constant literals instead.
 
-### 6.3.3 Inline Enum Forms
+### 6.3.3 Expression Enum Forms
+
+**Expression enums** are enums that appear directly inside type expressions, either as a constraint on a base type or as a standalone type. Examples:
 
 ```jssn
 str(enum A|B|C)
@@ -901,24 +962,19 @@ int(enum=[1,2,3])
 (enum=["ANY", 2])
 ```
 
-Type-less enums are allowed using `(enum ...)` as a standalone type expression.
-Parentheses are REQUIRED to avoid ambiguity with other inline forms.
-
-In this form, the element literals determine the allowed JSON values and tooling emits JSON Schema `enum` without an explicit `inline` keyword.
-
-In type-less enums, bare identifiers are interpreted as string literals (e.g., `ANY` → `"ANY"`).
+- Type-less expression enums are allowed using `(enum ...)` as a standalone type expression. Parentheses are REQUIRED to avoid ambiguity with other forms.
+- In this form, the element literals determine the allowed JSON values and tooling emits JSON Schema `enum` without an explicit `inline` or alias name.
+- In type-less expression enums, bare identifiers are interpreted as string literals (e.g., `ANY` → `"ANY"`).
 
 ### Notes
 
-- Enums MAY contain any JSON literal values supported by JSON Schema `enum` (string, number/integer, boolean, null, object, array).
+- Both expression enums and defined enums MAY contain any JSON literal values supported by JSON Schema `enum` (string, number/integer, boolean, null, object, array).
 - The `enum A|B|C` form and the `enum=[...]` form are equivalent; the `A|B|C` form is syntactic sugar.
 - These map directly to JSON Schema `enum`.
 - Canonical enum normalization is defined in §8.2 and tooling MUST enforce it.
-- Inline enum canonicalization preserves value order (no sorting); see §8.2.
+- Expression enum canonicalization preserves value order (no sorting); see §8.2.
 
-Inline enum syntax and enum block syntax are equivalent in semantics. Both MUST emit JSON Schema `enum`.
-
-Enum block syntax is recommended when enum values are numerous or long.
+Expression enums and defined enums are semantically equivalent. Both MUST emit JSON Schema `enum`. Defined enums are recommended when enum values are numerous, long, or require reuse or annotation.
 
 ---
 
@@ -2100,19 +2156,12 @@ Backward compatibility and deprecation rules are TBD.
 
 ### 10.3 Changes in v0.2 (Non-normative)
 
-- Renamed top-level blocks (`type` → `inline`, `schema` → `def`)
-- Generalized `def` blocks to allow any type expression (object, array, scalar, union, enum, literal)
-- Introduced a prefix-only array operator `[]` and forbade postfix array forms
-- Defined array length constraints as prefix modifiers attached directly after `[]`
-- Clearly distinguished homogeneous arrays from tuple-shaped arrays
-- Refined tuple syntax, including:
-  - strict tuples with fixed length
-  - open tuples with `...` (any tail)
-  - typed tail tuples using `...T`
-  - tail-only length constraints using `...(n)` and `...(min..max)`
-- Explicitly disallowed rewriting between array and tuple forms during canonicalization
-- Clarified annotation placement and precedence rules
-- Strengthened canonicalization rules for emission stability
+- Renamed top-level blocks `type` and `schema` to `inline` and `def`
+- Clarified the type / type-producer model
+- Generalized `def` blocks to define any type expression and emit `$defs`
+- Refined array, tuple, and object syntax, including length constraints
+- Clarified enum forms (expression vs defined) and canonical enum emission
+- Tightened annotation rules and canonical long-form normalization
 
 ---
 
