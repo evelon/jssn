@@ -13,7 +13,7 @@
 
 ---
 
-## 0. Notation Conventions
+## Notation Conventions
 
 This document uses small pieces of **emission pseudocode** when describing JSON Schema mappings.
 
@@ -36,11 +36,11 @@ means that tooling emits:
 }
 ```
 
-### 0.1 JSON Schema Target
+### JSON Schema Target
 
 Unless otherwise noted, the JSON Schema emission described in this document targets **JSON Schema 2020-12**. This matters for tuple/array keywords such as `prefixItems`.
 
-## 1. Design Principles
+## Design Principles
 
 - JSSN is a **schema-first DSL** designed for humans.
 - JSSN is a **source format** that can be transformed into JSON Schema.
@@ -55,7 +55,7 @@ A type describes the shape and constraints of values, independent of how that ty
 Some constructs in JSSN introduce **named types**.  
 Such constructs are referred to as **type producers** and are defined formally in §6.0.
 
-### 1.1 Design Intent (Non-normative)
+### Design Intent (Non-normative)
 
 The following notes clarify **why** certain design decisions exist.  
 These notes are non-normative and do not change validation semantics.
@@ -72,11 +72,11 @@ These notes are non-normative and do not change validation semantics.
 
 ---
 
-## 2. Document Structure
+## Document Structure
 
 A JSSN document consists of top-level blocks.
 
-### 2.1 Top-level Blocks
+### Top-level Blocks
 
 Allowed blocks:
 
@@ -107,7 +107,7 @@ def IdList [int...]
 def Enabled !true
 ```
 
-### 2.2 Canonical Block Order
+### Canonical Block Order
 
 When normalized, blocks MUST appear in this order:
 
@@ -115,7 +115,7 @@ When normalized, blocks MUST appear in this order:
 2. `inline`
 3. `def` (one or more)
 
-### 2.3 Separators: Line Break and Comma
+### Separators: Line Break and Comma
 
 JSSN treats **line breaks** as the primary separator in multi-line constructs.
 
@@ -147,9 +147,9 @@ Examples (equivalent):
 
 > A JSSN document therefore separates _structural reuse_ (`def`) from _structural composition_ (`inline`) explicitly at the block level.
 
-## 3. Meta Block
+## Meta Block
 
-### 3.1 Purpose
+### Purpose
 
 The `meta` block contains **document-level metadata**.
 
@@ -159,7 +159,7 @@ The `meta` block contains **document-level metadata**.
   The `entry` key identifies which `def` acts as the **document root**.  
   This designation is used by tooling to select the **entry schema** when emitting JSON Schema.
 
-### 3.2 Syntax
+### Syntax
 
 ```jssn
 meta {
@@ -169,7 +169,7 @@ meta {
 }
 ```
 
-### 3.3 Standard Keys (non-exhaustive)
+### Standard Keys (non-exhaustive)
 
 - `jssn_version`
 - `title`
@@ -180,7 +180,7 @@ meta {
 
 Additional keys MAY be present.
 
-### 3.4 Required Keys (Normative)
+### Required Keys (Normative)
 
 - `jssn_version` MUST be present.
 - If a document contains more than one `def` block, `entry` MUST be present and MUST equal the name of one declared `def`.
@@ -193,9 +193,9 @@ Additional keys MAY be present.
 
 ---
 
-## 4. Inline Block
+## Inline Block
 
-### 4.1 Purpose
+### Purpose
 
 The `inline` block defines **inline type aliases**.
 These aliases are **type producers** whose names are always expanded inline at their usage sites.
@@ -210,7 +210,7 @@ These base identifiers MUST be globally unique. If two declarations resolve to t
 
 ---
 
-### 4.2 Type Alias (Inline Only)
+### Type Alias (Inline Only)
 
 ```jssn
 inline {
@@ -226,16 +226,16 @@ Rules:
 - Every usage of `Name` MUST inline-expand `Expr`.
 - Tooling MUST NOT emit `$ref` for inline aliases.
 
-### 4.3 Usage Rules
+### Usage Rules
 
 All type names declared in `inline {}` are inline-expanded at usage sites.  
 `$ref` is never emitted for inline aliases.
 
-### 4.4 Format Alias
+### Format Alias
 
 A format alias is an inline alias and is always inline-expanded.
 
-### 4.5 Inline-level Annotation Rules
+### Inline-level Annotation Rules
 
 - Annotations MAY appear on inline alias declarations inside `inline { ... }`.
 - Inline alias annotations are **copied to every expansion site**.
@@ -243,7 +243,7 @@ A format alias is an inline alias and is always inline-expanded.
 - `@example(...)` is special: multiple examples MAY be combined by appending the alias examples after the use-site examples while preserving relative order. (No deduplication is required.)
 - This copy/precedence rule affects **annotation emission only** and MUST NOT affect validation semantics.
 
-## 5. Def Block
+## Def Block
 
 Each `def <Name> <TypeExpr>` defines a reusable named type in JSSN.  
 When emitted to JSON Schema, each `def` is represented as a named entry under `$defs`.
@@ -258,7 +258,7 @@ When emitted to JSON Schema, each `def` is represented as a named entry under `$
 
 The document entry is selected via `meta.entry` (or by the implicit single-definition rule) and determines which definition becomes the **entry schema** in the emitted JSON Schema.
 
-### 5.1 Purpose
+### Purpose
 
 A `def` block defines exactly one **named type definition**, which may be any valid type expression (object, array, scalar, union, enum, or literal).
 
@@ -282,7 +282,7 @@ def Mode "AUTO" | "MANUAL"
 def Count int(0..10)
 ```
 
-### 5.2 Rules
+### Rules
 
 - Named identifiers MUST be globally unique within the document (see §4.1): schema names and type alias names (`Name = ...`) share a single namespace.
 - Def blocks define a named type, which may be any valid type expression.
@@ -290,7 +290,7 @@ def Count int(0..10)
 - Non-object types MUST be written as a single inline type expression following the `def <Name>` header.
 - Type producer declarations are NOT allowed inside def blocks.
 
-### 5.3 Def References (New)
+### Def References (New)
 
 Defs MAY be referenced by name from within other defs.
 
@@ -328,9 +328,9 @@ Emission note (normative): Tooling MUST emit all `def <Name> <TypeExpr>` blocks 
 
 ---
 
-## 6. Type System
+## Type System
 
-### 6.0 Terminology: Types and Type Producers
+### Terminology: Types and Type Producers
 
 A **type** is any type expression that may appear on the right-hand side of a field declaration.
 
@@ -349,7 +349,7 @@ In JSSN v0.1, the following constructs are type producers:
 
 Type producers do not appear directly in field positions; their produced names do.
 
-### 6.1 Primitive Types (Keywords)
+### Primitive Types (Keywords)
 
 The following are reserved primitive type keywords:
 
@@ -376,9 +376,23 @@ Tooling MUST treat these forbidden identifiers case-insensitively.
 
 ---
 
-## 6.2 Object and Array Types
+## Object and Array Types
 
 ### Object
+
+> Note (Non-normative):
+>
+> Some schema languages and theoretical models allow object-level rules
+> that constrain _all_ property values uniformly. (often using the token `*`).
+> While such constructs can be useful in certain scenarios,
+> JSSN intentionally limits its expressive scope to a **well-defined subset
+> of JSON Schema features** that map directly and predictably to widely
+> supported JSON Schema constructs.
+>
+> As a result, JSSN does not provide an object-level “global value rule”
+> syntax in this specification.
+> Only property-specific rules, pattern-based rules, and explicit
+> additional-property constraints are supported.
 
 ```jssn
 {
@@ -431,23 +445,21 @@ obj(0..){
 
 - `obj(1..5)` constrains the **property count** (number of properties in the object).
 - In contrast:
-  - `*(1..5): V` and
   - `...(1..5): V`
     constrain the **length of property names** (the string length of each key).
 - These constraints are orthogonal and MAY be combined within the same object type.
 
-### Object — Header Entries (New)
+#### Object — Header Entries
 
 An object MAY start with **header entries** that apply to multiple properties.
 
 Header entry kinds:
 
-- `*` (global rule): applies to **all** properties in the object
 - `/regex/` (pattern rule): applies to properties whose names match the regex
 
 Header entries are representable in JSON Schema via `propertyNames` and `patternProperties`.
 
-#### Avoiding Confusion: `/regex/: V` vs `...(/regex/): V`
+##### Avoiding Confusion: `/regex/: V` vs `...(/regex/): V`
 
 Both forms use `/.../`, but they constrain different things:
 
@@ -467,30 +479,7 @@ Example:
 
 Means: keys starting with `i-` must have integer values; all other additional keys must have string values.
 
-#### Global Rule Entry (`*`)
-
-Syntax:
-
-```jssn
-*: V
-*(1..5): V
-```
-
-Semantics:
-
-- `*: V` means **all values** in the object MUST satisfy `V`.
-- `*(1..5): V` additionally constrains **all key names** to length `1..5`.
-
-JSON Schema mapping intention:
-
-- Value rule: emitted as the base value schema for the object (see §7.2.4 for interaction with other entries)
-- Key length rule: emitted as `propertyNames: schema(str(1..5))`
-
-Restrictions:
-
-- An object MUST contain at most one `*` entry.
-
-#### Pattern Rule Entry (`/regex/`)
+##### Pattern Rule Entry (`/regex/`)
 
 Syntax:
 
@@ -510,11 +499,11 @@ Notes:
 
 - Regex is evaluated using JSON Schema regex semantics; tooling MUST strip surrounding slashes when emitting JSON Schema.
 
-### Object — Dict / Map Sugar (Spread Form)
+#### Object — Dict / Map Sugar (Spread Form)
 
 Objects are **closed by default** (see §7.1), but a schema MAY allow additional (unknown) keys using the spread form.
 
-#### Mixed Fixed Fields + Additional Keys (Allowed)
+##### Mixed Fixed Fields + Additional Keys (Allowed)
 
 The spread form MAY be combined with fixed fields to allow a partially open object.
 
@@ -532,7 +521,7 @@ Mapping intention (JSON Schema):
 - `required` contains all non-optional fixed fields
 - `additionalProperties: {}` (because `any`)
 
-#### Allowing Additional Keys (Dictionary)
+##### Allowing Additional Keys (Dictionary)
 
 Mapping intention (JSON Schema):
 
@@ -560,7 +549,7 @@ Mapping intention:
 
 ---
 
-#### Constraining Key Names
+##### Constraining Key Names
 
 Since JSON object keys are strings, key constraints are expressed using string constraints.
 
@@ -609,7 +598,7 @@ Notes:
 
 ---
 
-#### Format-Constrained Keys (New)
+##### Format-Constrained Keys
 
 A format identifier MAY be used to constrain key names:
 
@@ -630,7 +619,7 @@ Warning:
 
 ---
 
-#### Pattern-Constrained Keys
+##### Pattern-Constrained Keys
 
 A regular expression MAY be used to constrain key names:
 
@@ -858,7 +847,25 @@ Tuple tail length constraints attach to the tail marker, not to the whole tuple.
 
 ---
 
-## 6.3 Enum
+> ### Design Rule: Enum vs Literal vs Union
+>
+> JSSN intentionally distinguishes **enum**, **constant literal**, and **union** constructs, even though all three can restrict a value to a finite set.
+> These constructs are **not interchangeable**, and tooling MUST preserve their semantic differences.
+>
+> - **Enum** represents a _closed set constraint_ over values of a single base type and is emitted using JSON Schema `enum`.
+>   - Enums express _membership_ in a predefined set.
+>   - Enums are canonicalized aggressively (see §8.2), including single-value enums collapsing to literals.
+> - **Constant literals** (prefixed with `!`) represent an _exact value lock_ and are emitted using JSON Schema `const`.
+>   - Literals express _identity_ to one specific value.
+>   - Literal types are preserved explicitly to allow safe schema evolution.
+> - **Union types** (`A | B`) represent _type-level disjunction_ and are emitted using JSON Schema `anyOf`.
+>   - Unions describe alternative shapes or value domains.
+>   - Even when all union members are constant literals, tooling MUST NOT rewrite unions into enums (see §6.8.3 and §8.5).
+>
+> Although JSON Schema allows overlapping encodings for these concepts, JSSN treats them as **semantically distinct authoring constructs**.
+> Tooling MUST preserve the author’s intent and MUST NOT normalize between enum, literal, and union forms except where explicitly required by canonicalization rules.
+
+## Enum
 
 JSSN supports two forms of enum declaration, which are semantically equivalent but differ in their usage and annotation capabilities:
 
@@ -869,7 +876,7 @@ JSSN supports two forms of enum declaration, which are semantically equivalent b
 
 Both forms emit equivalent JSON Schema `enum` constraints and are subject to the same canonicalization and value rules. Defined enums are preferred when reuse or annotation is required; expression enums are suitable for single-use or ad hoc constraints.
 
-### 6.3.1 Defined Enum Syntax
+### Defined Enum Syntax
 
 Defined enums are declared as named type aliases using the enum block form. This form is allowed only within the `inline` block or as the type expression of a `def`. The named alias may then be referenced elsewhere.
 
@@ -893,7 +900,7 @@ Rules:
 - Expression enum syntax (e.g., `str(enum ...)` or `(enum ...)`) MUST NOT be used inside `inline { ... }` or as the type expression of a defined enum. Use the enum block syntax instead.
 - Canonicalization: If a defined enum contains exactly one element, canonical output MUST replace the enum block with a literal type alias (see §6.10).
 
-### 6.3.2 Enum Value Rules
+### Enum Value Rules
 
 Enum elements represent literal JSON values.
 
@@ -949,7 +956,7 @@ Restrictions:
 - Enum elements MUST NOT include type expressions or constraints.
 - If type-specific constraints per value are needed, authors MUST use union types with constant literals instead.
 
-### 6.3.3 Expression Enum Forms
+### Expression Enum Forms
 
 **Expression enums** are enums that appear directly inside type expressions, either as a constraint on a base type or as a standalone type. Examples:
 
@@ -978,11 +985,11 @@ Expression enums and defined enums are semantically equivalent. Both MUST emit J
 
 ---
 
-## 6.4 Constraints
+## Constraints
 
 Constraints restrict the value domain of a type.
 
-### 6.4.1 Range Syntax (Recommended)
+### Range Syntax (Recommended)
 
 ```jssn
 int(1..7)
@@ -991,14 +998,14 @@ arr(1..10)
 obj(1..20)
 ```
 
-### 6.4.2 Keyed Syntax (Also Allowed)
+### Keyed Syntax (Also Allowed)
 
 ```jssn
 int(min=1, max=7)
 str(min=5, max=30)
 ```
 
-### 6.4.3 Constraint Applicability
+### Constraint Applicability
 
 Range/size constraints are allowed only when the underlying base type is:
 
@@ -1011,16 +1018,16 @@ This rule is JSON Schema–compatible.
 
 ---
 
-## 6.5 Format
+## Format
 
-### 6.5.1 Definition
+### Definition
 
 A format is a **semantic refinement** of a base type.
 
 - A format does NOT introduce a new data kind.
 - Formats are most commonly applied to `str`.
 
-### 6.5.x Design Intent: Format Handling
+### Design Intent: Format Handling
 
 JSSN treats `format` as a semantic hint rather than a strict validation mechanism.
 
@@ -1033,7 +1040,7 @@ Design goals:
 
 JSSN does not define a strict-format mode and does not enforce format validation beyond JSON Schema semantics.
 
-### 6.5.2 Syntax
+### Syntax
 
 ```jssn
 str(uuid)
@@ -1042,14 +1049,14 @@ str(date-time)
 str(email, 5..30)
 ```
 
-### 6.5.2.1 Format Identifier Token Rules
+### Format Identifier Token Rules
 
 - `<format>` is an **opaque identifier token**.
 - Tooling MUST preserve the `<format>` string byte-for-byte when emitting JSON Schema.
 - `<format>` MUST NOT contain whitespace, commas, parentheses, or the union operator `|`.
 - `<format>` MAY contain ASCII letters, digits, `_`, `-`, and `.` (no normalization is performed).
 
-### 6.5.3 Multiple Arguments
+### Multiple Arguments
 
 Within `str(...)`, at most one format identifier is allowed.
 
@@ -1068,7 +1075,7 @@ str(5..30, email) // input allowed, canonicalized to str(email, 5..30)
 
 ---
 
-## 6.6 Union Types
+## Union Types
 
 Union types are expressed using `|`.
 
@@ -1083,13 +1090,13 @@ int(0..7) | null
 
 ---
 
-## 6.7 Optional Fields
+## Optional Fields
 
 ### Default Rule
 
 All fields are required by default.
 
-### Optional Marker
+### optional Marker
 
 ```jssn
 history_id?: int
@@ -1100,12 +1107,12 @@ history_id?: int
 
 ---
 
-## 6.8 Constant Literals
+## Constant Literals
 
 JSSN supports **constant literal values** to fix a field to an exact JSON value.
 Constant literals are desugared to JSON Schema `const`.
 
-### 6.8.1 Syntax
+### Syntax
 
 A constant literal is expressed by prefixing a value with `!`.
 
@@ -1134,7 +1141,7 @@ Rules:
 - At most one constant literal argument is allowed.
 - The argument list in `T(...)` is shared with existing constraints/format/enum arguments.
 
-### 6.8.2 Allowed Literals
+### Allowed Literals
 
 The following literal kinds are supported:
 
@@ -1146,7 +1153,7 @@ The following literal kinds are supported:
 - object
 - array
 
-### 6.8.3 Union Interaction
+### Union Interaction
 
 Constant literals MAY appear as members of union types.
 
@@ -1159,7 +1166,7 @@ These are desugared using JSON Schema `anyOf`.
 
 Tooling MUST NOT rewrite literal unions into `enum`.
 
-### 6.8.4 Semantics
+### Semantics
 
 - A constant literal restricts the value to be **exactly equal** to the given literal.
 - A leading `!` has **no other semantic meaning**.
@@ -1316,13 +1323,13 @@ JSON Schema mapping:
 - Default values MUST be expressed using annotation syntax: `@~literal` (shorthand) or `@default(literal)` (canonical).
 - Default annotations MAY appear on fields, defined types (`Name = Expr`), or schema declarations.
 
-## 6.9 Default Values
+### Default Values
 
 Default values in JSSN are expressed as annotations and map directly to JSON Schema `default`.
 
 Default values do NOT affect validation and are treated as metadata for tooling and documentation.
 
-### 6.9.1 Syntax
+#### Syntax
 
 Canonical form:
 
@@ -1347,21 +1354,21 @@ inline {
 RetryCount = int(0..5) @~3
 }
 
-### 6.9.2 Semantics
+#### Semantics
 
 - A default value does NOT affect validation.
 - Default values MAY be used by tooling for UI initialization, code generation, and documentation.
 - Default values MAY appear on required or optional fields.
 - Default values do NOT imply optionality.
 
-### 6.9.3 Compatibility
+#### Compatibility
 
 A default value MUST satisfy all declared constraints of its type.
 
 retries: int(0..5) @~3 // valid
 retries: int(0..5) @~10 // invalid
 
-### 6.9.4 Interaction with Constant Literals
+#### Interaction with Constant Literals
 
 Defaults MAY coexist with constant literals:
 
@@ -1369,7 +1376,7 @@ retries: int(!1) @~1
 
 The default MAY be redundant but SHOULD be preserved for documentation and future schema evolution.
 
-### 6.9.5 Restrictions
+#### Restrictions
 
 - `@~` MUST prefix a literal.
 - Object and array defaults MUST use constant literal forms:
@@ -1378,7 +1385,7 @@ The default MAY be redundant but SHOULD be preserved for documentation and futur
 
 ---
 
-## 6.10 Literal Types (Inline Block)
+## Literal Types (Inline Block)
 
 Within the `inline` block, a type alias declaration (`Name = ...`) MAY declare a **literal type** using the constant-literal prefix `!`, or a **typed constant** using `T(..., !literal)`. Literal types emit JSON Schema `const`.
 
@@ -1425,9 +1432,9 @@ a literal type can later become a constrained type without changing field struct
 
 Literal types are therefore preserved explicitly rather than always normalized to enums or unions.
 
-## 7. Additional Properties Policy
+## Additional Properties Policy
 
-### 7.x Design Intent: Object Strictness
+### Design Intent: Object Strictness
 
 JSSN objects are closed by default to encourage explicit contracts.
 
@@ -1439,7 +1446,7 @@ This design:
 
 The spread (`...`) form exists as an explicit opt-in to open object behavior.
 
-### 7.1 Default
+### Default
 
 All objects have:
 
@@ -1451,17 +1458,17 @@ by default.
 
 This aligns with strict schema contracts.
 
-### 7.2 Overrides (v0.1)
+### Overrides (v0.1)
 
 JSSN v0.1 supports overriding the default `additionalProperties = forbid` policy via the object spread form (`...`) inside an object type.
 
-#### 7.2.1 No Spread (Default)
+#### No Spread (Default)
 
 If an object contains no spread entry, it is closed:
 
 - `additionalProperties: false`
 
-#### 7.2.2 Spread Present (Override)
+#### Spread Present (Override)
 
 If an object contains a spread entry, it allows additional keys:
 
@@ -1486,7 +1493,7 @@ Mapping intention:
 - `required: ["id"]`
 - `additionalProperties: schema(str)`
 
-#### 7.2.3 Key Constraints with Spread
+#### Key Constraints with Spread
 
 When a spread key constraint is present (length, format, or regex), tooling MUST emit `propertyNames` accordingly:
 
@@ -1513,102 +1520,11 @@ Notes:
 - JSON Schema applies `propertyNames` to all property names (including fixed keys). This is a JSON Schema behavior, not a JSSN-specific rule.
 - JSON Schema `format` may be treated as a hint by some validators; see §6.5 and the warning in §6.2.
 
-#### 7.2.4 JSON Schema Emission Summary (New)
-
-This subsection summarizes how object entries map to JSON Schema.
-
-Given an object type containing any combination of:
-
-- `*` (global rule)
-- `/regex/` entries (pattern rules)
-- fixed fields
-- spread entries (`...`)
-
-Tooling MUST emit JSON Schema object keywords as follows:
-
-- Fixed fields:
-  - `properties` contains fixed field schemas
-  - `required` contains all non-optional fixed field names
-
-- Spread (`...`):
-  - If present as `{ ...: V }`, emit `additionalProperties: schema(V)`
-  - If present as `{ ...: any }`, emit `additionalProperties: {}`
-  - If absent, emit `additionalProperties: false` (closed object)
-
-- Pattern rules (`/regex/: V`):
-  - Emit `patternProperties: { "<pattern>": schema(V) }` for each pattern rule.
-
-- Global key constraints (`*(1..5): V`):
-  - Emit `propertyNames: schema(str(1..5))`.
-
-- Global value rule (`*: V*`):
-  - The global value rule applies to ALL properties in the object, including fixed fields and pattern-matched properties.
-  - When emitting field schemas and pattern schemas, tooling MUST compose `V*` with the local schema (AND).
-  - Tooling SHOULD merge constraints to avoid emitting `allOf` when a lossless merge is possible.
-  - If a lossless merge is not possible, tooling MAY emit `allOf: [schema(V*), schema(Vlocal)]`.
-
-Notes:
-
-- Spread entries (`...`) apply ONLY to additional (unknown) properties via `additionalProperties`.
-- Fixed fields and pattern rules are NOT required to be compatible with a spread `{ ...: V }`.
-
 ---
 
-### 7.3 Object Value Rule Composition (New)
+## Canonical Form & Normalization
 
-This section defines how object-level value rules compose when multiple entry kinds are present.
-
-#### 7.3.1 Base Value Rule
-
-- If an object contains a `*` entry, its value schema `V*` is the **base value rule** for the object.
-- Otherwise, the object has no base value rule.
-
-Example:
-
-```jssn
-{
-  *: int
-  id: int
-}
-```
-
-Valid.
-
-```jssn
-{
-  *: int
-  id: str
-}
-```
-
-Invalid (the fixed field schema is incompatible with the global value rule).
-
-#### 7.3.2 Fixed Fields
-
-If a base value rule `Vbase` exists, then every fixed field schema `Vfield` MUST be compatible with it.
-
-- If `Vfield` and `Vbase` have an empty intersection, the object schema is **invalid**.
-- Tooling SHOULD merge constraints to emit a single schema for the field when possible.
-- If a lossless merge is not possible, tooling MAY emit `allOf: [schema(Vbase), schema(Vfield)]`.
-
-#### 7.3.3 Pattern Rules
-
-If a base value rule `Vbase` exists, then every pattern rule schema `Vpat` MUST be compatible with it.
-
-- If `Vpat` and `Vbase` have an empty intersection, the object schema is **invalid**.
-- Tooling SHOULD merge constraints to emit a single schema for the pattern when possible.
-- If a lossless merge is not possible, tooling MAY emit `allOf: [schema(Vbase), schema(Vpat)]`.
-
-#### 7.3.4 Format Compatibility
-
-For string schemas with `format`:
-
-- If both sides specify a `format` and the formats differ, the intersection is empty and the schema is **invalid**.
-- If both specify the same `format`, tooling MUST emit that same `format`.
-
-## 8. Canonical Form & Normalization
-
-### 8.x Design Intent: Canonical Form
+### Design Intent: Canonical Form
 
 Canonical form exists to support tooling, collaboration, and long-term maintenance.
 
@@ -1616,7 +1532,7 @@ Canonical output serves the following purposes:
 
 - Stable diffs across formatting tools
 - Deterministic emission from any compliant formatter
-- Semantic identity comparison between schemas
+- Semantic identity comparison between schemas`
 - Predictable code generation and tooling behavior
 
 Canonicalization SHOULD be applied by formatters and emitters, but authors are not required to write canonical syntax manually.
@@ -1626,7 +1542,7 @@ If multiple syntactic forms are semantically identical, canonicalization MAY nor
 
 JSSN defines a canonical form to ensure **stable diffs**, **predictable tooling**, and **unambiguous semantics**.
 
-### 8.0 Terminology: Lexicographic Order
+### Terminology: Lexicographic Order
 
 When this document says **lexicographic order**, it means:
 
@@ -1643,12 +1559,12 @@ When this document says **lexicographic order**, it means:
 
 - In canonical output, default annotations MUST be preserved, even when redundant due to `const`, to retain design intent.
 
-- Within an object, canonical output MUST order entries as: `*` (if present), then `/regex/` entries, then fixed fields (required and optional), and finally a spread (`...`) entry (if present).
+- Within an object, canonical output MUST order entries as: `/regex/` entries, then fixed fields, and finally a spread (`...`) entry (if present).
 - In canonical output, a spread entry with value type `any` MUST be emitted as `...` (not `...: any`).
 
 ---
 
-### 8.2 Enum Canonicalization
+### Enum Canonicalization
 
 Allowed input forms include:
 
@@ -1687,7 +1603,7 @@ Canonical output rules:
 
 ---
 
-### 8.3 Constraint Canonicalization
+### Constraint Canonicalization
 
 Constraints MAY be written using range syntax or keyed syntax.
 
@@ -1719,8 +1635,7 @@ For object spread key constraints, canonical output MUST use the shorthand form:
 
 For objects that use header entries:
 
-- `*` entry (if present) MUST appear first.
-- `/regex/` entries MUST appear next, in lexicographic order by their regex literal (see §8.0).
+- `/regex/` entries MUST appear first, in lexicographic order by their regex literal (see §8.0).
 - A spread entry MUST be last (if present).
 - Ordering compares the raw `/.../` token text exactly as written (opaque), without any normalization.
 
@@ -1734,7 +1649,7 @@ For format-constrained spread keys, canonical output MUST use:
 
 ---
 
-### 8.4 Array and Tuple Canonicalization
+### Array and Tuple Canonicalization
 
 This section defines the canonical surface forms for array and tuple type expressions.
 Canonicalization MUST follow the syntax and precedence rules defined in §6.2.
@@ -1869,7 +1784,7 @@ Rules:
 
 ---
 
-### 8.5 Union Canonicalization
+### Union Canonicalization
 
 Unions are expressed using the `|` operator.
 
@@ -1906,7 +1821,7 @@ Note: A union of constant literals (e.g., `"ANY" | 2`) is emitted using JSON Sch
 
 ---
 
-### 8.6 Schema Ordering
+### Schema Ordering
 
 Def blocks MUST be emitted in declaration order.
 
@@ -1915,7 +1830,7 @@ The `meta.entry` key, if present, identifies the entry schema without affecting 
 
 ---
 
-### 8.7 Annotation Canonicalization
+### Annotation Canonicalization
 
 Canonical output MUST emit **long-form** standard annotations for stability and simpler parsing.
 
@@ -1935,7 +1850,7 @@ Canonical rules:
 - `@X` MAY be accepted as an input alias of `@deprecated`.
 - Canonical output MUST emit `@deprecated` (never `@X`).
 
-### 8.8 Def Block Canonicalization
+### Def Block Canonicalization
 
 Def blocks define named reusable types and have a canonical structural form.
 
@@ -1976,18 +1891,18 @@ Canonical rules:
 - Canonicalization MUST NOT rewrite a `def` into an inline alias or vice versa.
   Whether a named type is inline-expanded or emitted via `$defs` is determined solely by the declaration kind, not by usage.
 
-### 8.9 Named Type Reference Canonicalization
+### Named Type Reference Canonicalization
 
 - References to **inline aliases** are written as bare `Name` and are always inline-expanded at emission time.
 - References to **defs** are written as bare `Name` and are emitted as `$ref` to `#/$defs/Name`.
 
 Because usage syntax is identical, canonicalization MUST NOT rewrite references. The declaration form (inline vs def) is the single source of truth for whether emission expands inline or emits `$ref`.
 
-## 9. Invalid Schemas (Normative)
+## Invalid Schemas (Normative)
 
 This section defines conditions under which a JSSN schema is **invalid**. Tooling MUST reject invalid schemas.
 
-### 9.1 Type–Literal Mismatch
+### Type–Literal Mismatch
 
 A schema is invalid if a literal value is not compatible with its declared type.
 
@@ -1998,7 +1913,7 @@ retries: int @~"three"
 flag: bool(!"yes")
 ```
 
-### 9.2 Invalid Constraint Applicability
+### Invalid Constraint Applicability
 
 A schema is invalid if a range/size constraint is applied to an unsupported base type.
 
@@ -2009,46 +1924,7 @@ bool(1..3)
 null(1..)
 ```
 
-### 9.3 Global Rule (`*`) Conflicts with Fixed Fields
-
-When a global value rule is present, every fixed field schema MUST have a non-empty intersection with it. Otherwise the schema is invalid.
-
-Example:
-
-```jssn
-{
-  *: int
-  id: str
-}
-```
-
-### 9.4 Global Rule (`*`) Conflicts with Pattern Rules
-
-A schema is invalid if a pattern rule schema has an empty intersection with the global value rule.
-
-Example:
-
-```jssn
-{
-  *: int
-  /^i-/: str
-}
-```
-
-### 9.5 Format Conflicts
-
-For string schemas with `format`, if a global rule and a local rule both specify a `format` and the formats differ, the schema is invalid.
-
-Example:
-
-```jssn
-{
-  *: str(uuid)
-  id: str(email)
-}
-```
-
-### 9.6 Enum and Constant Conflicts
+### Enum and Constant Conflicts
 
 A schema is invalid if an `enum` constraint and a `const` literal are mutually exclusive.
 
@@ -2059,7 +1935,7 @@ status: str(enum A|B, !"C")
 count: int(enum 1|2, !3)
 ```
 
-### 9.7 Default Value Violations
+### Default Value Violations
 
 A schema is invalid if a default value (`@~literal` or `@default(literal)`) does not satisfy the declared type, constraints, or format.
 
@@ -2069,28 +1945,22 @@ Example:
 retries: int(0..5) @~10
 ```
 
-### 9.8 Object Entry Multiplicity Errors
+### Object Entry Multiplicity Errors
 
 An object schema is invalid if it declares:
 
-- more than one global rule entry (`*`), or
 - more than one spread entry (`...`).
 
 Examples:
 
-```jssn
 {
-  *: int
-  *: num
+...: int
+...: str
 }
 
-{
-  ...: int
-  ...: str
-}
-```
+````
 
-### 9.9 Global Name Conflicts
+### Global Name Conflicts
 
 A document is invalid if any two declarations resolve to the same identifier in the global namespace.
 
@@ -2108,9 +1978,9 @@ inline {
 def SeatNo {
   id: int
 }
-```
+````
 
-### 9.10 Name Conflicts Between `inline` and `def`
+### Name Conflicts Between `inline` and `def`
 
 A document is invalid if any `def <Name>` conflicts with a name declared in `inline {}`.
 
@@ -2126,7 +1996,7 @@ def SeatNo {
 }
 ```
 
-### 9.11 Multiple Format Identifiers
+### Multiple Format Identifiers
 
 A schema is invalid if more than one format identifier is specified within `str(...)`.
 
@@ -2136,9 +2006,9 @@ Example (invalid):
 id: str(uuid, email)
 ```
 
-## 10. Versioning
+## Versioning
 
-### 10.1 JSSN Version
+### JSSN Version
 
 Declared via:
 
@@ -2150,11 +2020,11 @@ meta {
 
 The `jssn_version` key is required (see §3.4).
 
-### 10.2 Compatibility Policy
+### Compatibility Policy
 
 Backward compatibility and deprecation rules are TBD.
 
-### 10.3 Changes in v0.2 (Non-normative)
+### Changes in v0.2 (Non-normative)
 
 - Renamed top-level blocks `type` and `schema` to `inline` and `def`
 - Clarified the type / type-producer model
@@ -2165,7 +2035,7 @@ Backward compatibility and deprecation rules are TBD.
 
 ---
 
-## 11. Future Work (Non-normative)
+## Future Work (Non-normative)
 
 The following topics are intentionally out of scope for v0.1.
 
