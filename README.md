@@ -6,4 +6,4 @@ JSSN (JSON Schema Simplified Notation) is a notation being developed to express 
 
 JSSN follows two design principles: compatibility with JSON Schema, and readability.
 
-The current goal is to first develop JSSN syntax that is compatible with the most commonly used JSON Schema constructs, then quickly build a JSON Schema → JSSN converter on top of that and ship it as version 0.1.0. After that, compatible syntax will be added incrementally.
+As of version 0.1.0, JSSN covers only the basic type rules of JSON Schema, and a JSON Schema → JSSN converter implementing them is available. From here, compatible syntax will keep being added incrementally. See `spec/CHANGELOG.md` and `converter/CHANGELOG.md` for details.
