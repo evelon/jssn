@@ -1,5 +1,7 @@
 # Types
 
+> **JSON Schema equivalent:** `prefixItems` (an array of schemas for positional/tuple validation), combined with `items: false` to disallow extra elements. In Draft 7 / 2019-09, the same thing is written as `items` given an array of schemas, with `additionalItems: false` instead of `items: false`.
+
 ## Type Names
 
 JSON has six basic data types: `string`, `number`, `boolean`, `object`, `array`, and `null`.
@@ -42,6 +44,8 @@ On a single line, elements or properties are separated by a comma (`,`). Across 
 
 #### Array
 
+> **JSON Schema equivalent:** `prefixItems` (an array of schemas for positional/tuple validation), combined with `items: false` to disallow extra elements. In Draft 7 / 2019-09, the same thing is written as `items` given an array of schemas, with `additionalItems: false` instead of `items: false`.
+
 ```jssn
 [int, bool, str]
 ```
@@ -57,6 +61,8 @@ or,
 ```
 
 #### Object
+
+> **JSON Schema equivalent:** the `properties` keyword
 
 ```jssn
 {

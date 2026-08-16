@@ -1,6 +1,6 @@
 # Required and Optional Properties
 
-By default, every property in an `obj` is optional — it may be present or absent. This mirrors JSON Schema, where properties are optional unless explicitly listed in `required`.
+> **JSON Schema equivalent:** the `required` array, combined with `properties`
 
 To mark a property as required, append `!` to its key name, immediately before the colon.
 
