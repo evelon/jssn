@@ -1,0 +1,17 @@
+{
+  id: int
+  username: str
+  email: str
+  role: str
+  score: num
+  isActive: bool
+  profile: {
+    bio: str
+    website: str
+  }
+  friends: arr
+  badges: [
+    str
+  ]
+  createdAt: str
+}
