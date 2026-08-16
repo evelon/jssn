@@ -11,7 +11,7 @@ REPO_ROOT = os.path.dirname(CONVERTER_DIR)
 EXAMPLES_DIR = os.path.join(REPO_ROOT, "examples")
 
 sys.path.insert(0, CONVERTER_DIR)
-import json_schema_to_jssn as converter  # noqa: E402
+import json_schema_to_jssn as converter
 
 
 def load_example(name):
@@ -41,7 +41,15 @@ class ExampleFixturesTest(unittest.TestCase):
         self.assertIn("settings", warnings)
         self.assertIn("dropping array item", warnings)
         # Keywords not yet part of the JSSN spec must not leak into the output.
-        for keyword in ("required", "additionalProperties", "format", "enum", "$ref", "anyOf", "default"):
+        for keyword in (
+            "required",
+            "additionalProperties",
+            "format",
+            "enum",
+            "$ref",
+            "anyOf",
+            "default",
+        ):
             self.assertNotIn(keyword, result)
 
 
