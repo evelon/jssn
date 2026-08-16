@@ -1,0 +1,20 @@
+{
+  id: int
+  title: str
+  published: bool
+  rating: num
+  tags: [
+    str
+  ]
+  coordinates: [
+    num
+    num
+  ]
+  author: {
+    name: str
+    email: str
+  }
+  metadata: obj
+  attachments: arr
+  deletedAt: null
+}
