@@ -65,9 +65,7 @@ or,
 > **JSON Schema equivalent:** the `properties` keyword
 
 ```jssn
-{
-  one: int, two: int
-}
+{one: int, two: int}
 ```
 
 or
