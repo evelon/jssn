@@ -7,9 +7,12 @@ JSSN's spec targets **JSON Schema Draft 2020-12**. Where syntax differs from old
 ## Documents
 
 - [indentation.md](./indentation.md) — indentation recommendations
-- [types.md](./types.md) — basic type names and array/object syntax
-- [required.md](./required.md) — required vs. optional property syntax (the `!` suffix)
 - [json-schema-reference.md](./json-schema-reference.md) — reference checklist of JSON Schema's essential syntax, used to scope JSSN's own roadmap
+
+### Features
+
+- [types.md](./features/types.md) — basic type names and array/object syntax
+- [required.md](./features/required.md) — required vs. optional property syntax (the `!` suffix)
 
 ## Documentation Convention
 
