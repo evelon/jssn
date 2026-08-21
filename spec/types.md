@@ -32,7 +32,7 @@ In addition to the aliases above, JSSN has one more type: `any`. Unlike the othe
 
 - **A dedicated type, not an omitted one.** JSON Schema expresses "no constraint" by leaving `type` out entirely (or writing an empty schema, `{}`). JSSN instead gives it an explicit name, `any`, so every property or array slot keeps the same `key: type` / bare-type shape — no special-case grammar for "no type here."
 - **Includes `null`.** Because `any` places no constraint at all, it also accepts `null` — this matches JSON Schema's empty-schema behavior, and differs from a future "any non-null type" union, should one be introduced.
-- **Added for the required-without-properties edge case.** JSON Schema allows a key to be listed in `required` without appearing in `properties` at all, leaving its value unconstrained (see `required-optional-properties.md`). `any` exists to make that case expressible in JSSN — but it isn't limited to it; it works anywhere a type is expected, such as array elements or nested object properties.
+- **Added for the required-without-properties edge case.** JSON Schema allows a key to be listed in `required` without appearing in `properties` at all, leaving its value unconstrained (see `required.md`). `any` exists to make that case expressible in JSSN — but it isn't limited to it; it works anywhere a type is expected, such as array elements or nested object properties.
 
 ## Usage
 
