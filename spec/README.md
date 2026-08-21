@@ -22,7 +22,7 @@ Each feature document notes, directly under its title (and under relevant sub-se
 
 - Union types / nullable values
 - `enum` / `const`
-- String, number, and array value constraints (`minLength`, `pattern`, `minimum`, `maximum`, `minItems`, etc.)
+- String, number, and array value constraints (`minLength`, `pattern`, `minimum`, `maximum`, `minItems`, `maxItems`, `uniqueItems`, `contains`/`minContains`/`maxContains`, etc.)
 - Reuse / references (corresponds to JSON Schema's `$ref`/`$defs`)
 - `additionalProperties` control
 - Combinators (`allOf`/`anyOf`/`oneOf`/`not`, `if`/`then`/`else`)
