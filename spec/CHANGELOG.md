@@ -22,3 +22,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - Indentation recommendations
 - Basic type rules
+
+[0.1.1]: https://github.com/evelon/jssn/compare/spec-v0.1.0...spec-v0.1.1
+[0.1.0]: https://github.com/evelon/jssn/releases/tag/spec-v0.1.0

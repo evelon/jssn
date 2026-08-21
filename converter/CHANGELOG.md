@@ -19,3 +19,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `-o`/`--output` option to write the result to a file instead of stdout
 - Constructs not yet covered by the JSSN spec (`$ref`, `allOf`/`anyOf`/`oneOf`, `enum`, `const`, `required`, `format`, `additionalProperties`, `default`, etc.) are dropped from the output, with a warning printed to stderr for each dropped property or array item
 - Example fixtures (`examples/supported.*`, `examples/with-unsupported.*`) and a test suite covering type aliases, object/array conversion, and the CLI
+
+[0.1.0]: https://github.com/evelon/jssn/releases/tag/conv-v0.1.0
