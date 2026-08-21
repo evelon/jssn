@@ -6,4 +6,4 @@ JSSN (JSON Schema Simplified Notation) is a notation being developed to express 
 
 JSSN follows two design principles: compatibility with JSON Schema, and readability.
 
-JSSN's spec is organized as one document per feature — see [spec/README.md](spec/README.md) for what's currently covered and what's on the roadmap. A JSON Schema → JSSN converter implementing the covered syntax is also available. See `spec/CHANGELOG.md` and `converter/CHANGELOG.md` for details.
+JSSN's spec is organized as one document per feature — see [spec/README.md](spec/README.md) for what's currently covered and what's on the roadmap. A JSON Schema → JSSN converter implementing the covered syntax is also available — see [converter/README.md](converter/README.md) for usage. See `spec/CHANGELOG.md` and `converter/CHANGELOG.md` for details.
