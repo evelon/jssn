@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- Split the spec into one document per feature (`types.md`, `required-optional-properties.md`), with a `README.md` index and roadmap
+- Split the spec into one document per feature (`types.md`, `required.md`), with a `README.md` index and roadmap
 - Each feature document (and relevant sub-sections) now notes the JSON Schema keyword or element it corresponds to
 
 ## [0.1.0] - 2026-08-16
