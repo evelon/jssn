@@ -70,3 +70,6 @@ Thumbs.db
 
 # --- Logs ---
 *.log
+
+# --- claude code ---
+CLAUDE.md
