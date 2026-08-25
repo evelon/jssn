@@ -1,10 +1,12 @@
-# Tuple Length
+# Array
 
 > **JSON Schema equivalent:** `items`, `prefixItems`, `minItems`, `maxItems`. In Draft 7 / 2019-09, `prefixItems` doesn't exist — `items` takes an array of schemas instead, and `additionalItems` takes over the trailing-elements role that `items` plays here (`minItems`/`maxItems` are unchanged).
 
-## Closed Tuples
+An array is written with brackets. On a single line, elements are separated by a comma (`,`). Across multiple lines, a line break alone is enough to separate them — both forms appear throughout the examples below.
 
-A tuple of fixed length is written by simply listing its element types:
+## Closed Arrays
+
+An array of fixed length is written by simply listing its element types:
 
 ```jssn
 [bool, str, int]
@@ -35,9 +37,9 @@ This is equivalent to:
 }
 ```
 
-## Open Tuples
+## Open Arrays
 
-A tuple that stays open to further elements of a given type, past its fixed prefix, is written with `...` immediately before that type. The example below is open to `num` past its first three elements:
+An array that stays open to further elements of a given type, past its fixed prefix, is written with `...` immediately before that type. The example below is open to `num` past its first three elements:
 
 ```jssn
 [bool, str, int, ...num]
@@ -60,7 +62,7 @@ Equivalent to:
 }
 ```
 
-A tuple open to any type past its prefix is written with a bare `...`:
+An array open to any type past its prefix is written with a bare `...`:
 
 ```jssn
 [bool, str, int, ...]
@@ -89,13 +91,13 @@ which is equivalent to:
 
 ## Bounded Trailing Elements
 
-Past a tuple's fixed prefix, the allowed count of trailing elements of a given type is written `(min)..(max) (type)` — a single space separates the count from the type. For example, "between 2 and 4 more `num`s" is `2..4 num`; "3 or more" is `3.. num`; "up to 4" is `..4 num`. `any` can be dropped from this position, so `2..4`, `3..`, and `..4` are equally valid.
+Past an array's fixed prefix, the allowed count of trailing elements of a given type is written `(min)..(max) (type)` — a single space separates the count from the type. For example, "between 2 and 4 more `num`s" is `2..4 num`; "3 or more" is `3.. num`; "up to 4" is `..4 num`. `any` can be dropped from this position, so `2..4`, `3..`, and `..4` are equally valid.
 
 This bounded-count notation is a separate token from `...`. By the rule above, an unbounded trailing count (no minimum, no maximum) would be written `.. (type)` — but it's written `...(type)` instead, reusing the fully-open notation from the previous section. This exception is purely for readability: `...num` reads better than `..num`.
 
 ### Optionally-Present Elements
 
-A tuple can have a variable length while still fixing the type at each index. In the example below, index 0 (`bool`) must always be present; if the array grows, index 1 must be `str` and index 2 must be `int`, but the length can never exceed 3. The boundary between the required and optional portions is marked with `;`; a `,` is never used at that same boundary.
+An array can have a variable length while still fixing the type at each index. In the example below, index 0 (`bool`) must always be present; if the array grows, index 1 must be `str` and index 2 must be `int`, but the length can never exceed 3. The boundary between the required and optional portions is marked with `;`; a `,` is never used at that same boundary.
 
 ```jssn
 [bool; str, int]
@@ -128,7 +130,7 @@ Equivalent to:
 
 ### Minimum-Bounded Trailing Elements
 
-An open tuple can require a minimum count of trailing elements.
+An open array can require a minimum count of trailing elements.
 
 ```jssn
 [bool, str, int, 2..]
@@ -188,7 +190,7 @@ Equivalent to:
 
 ### Maximum-Bounded Trailing Elements
 
-An open tuple can also cap the count of trailing elements. The example below is open, but at most 3 further elements may follow.
+An open array can also cap the count of trailing elements. The example below is open, but at most 3 further elements may follow.
 
 ```jssn
 [bool, str, int, ..3]
@@ -245,9 +247,9 @@ Equivalent to:
 
 ### Extending by Exactly One Element
 
-When `minItems` and `maxItems` are equal, and exactly one greater than `prefixItems`'s length, the tuple behaves as if `prefixItems` had simply been extended by one element — semantically identical to a closed tuple.
+When `minItems` and `maxItems` are equal, and exactly one greater than `prefixItems`'s length, the array behaves as if `prefixItems` had simply been extended by one element — semantically identical to a closed array.
 
-This isn't new syntax. Once `minItems` and `maxItems` both equal `prefixItems`'s length, no array index can ever reach the position `items` would apply to — so `items: false`, `items: { ... }`, and `items: true` all behave identically. The two schemas below are therefore equivalent to the `items: false` form already covered under Closed Tuples, and are written the same way, with no extra punctuation. This section exists only to show that these differently-shaped (and somewhat awkwardly-written) schemas fold back into a closed tuple.
+This isn't new syntax. Once `minItems` and `maxItems` both equal `prefixItems`'s length, no array index can ever reach the position `items` would apply to — so `items: false`, `items: { ... }`, and `items: true` all behave identically. The two schemas below are therefore equivalent to the `items: false` form already covered under Closed Arrays, and are written the same way, with no extra punctuation. This section exists only to show that these differently-shaped (and somewhat awkwardly-written) schemas fold back into a closed array.
 
 ```json
 {
@@ -287,21 +289,21 @@ or
 [bool, str, int, any]
 ```
 
-> `any` must be written out explicitly here — this is a tuple slot, and `any`-omission doesn't apply inside a tuple (see [types.md](types.md)).
+> `any` must be written out explicitly here — this is an array slot, and `any`-omission doesn't apply inside an array (see [types.md](types.md)).
 
-## Uncommon Tuples
+## Uncommon Arrays
 
 The sections below cover results that are rarely intended. Most readers can skip this section.
 
-JSON Schema only requires `minItems` and `maxItems` to be non-negative integers — either is valid on its own. But combined with each other, or with `prefixItems`/`items`, some combinations describe a tuple whose shape doesn't make sense.
+JSON Schema only requires `minItems` and `maxItems` to be non-negative integers — either is valid on its own. But combined with each other, or with `prefixItems`/`items`, some combinations describe an array whose shape doesn't make sense.
 
-Rather than silently rendering only the valid portion, jssn surfaces these combinations using `;;`, to warn the author that the source JSON Schema was likely written by mistake. Wherever a part of the tuple is invalid, its type is prefixed with `-` for readability.
+Rather than silently rendering only the valid portion, jssn surfaces these combinations using `;;`, to warn the author that the source JSON Schema was likely written by mistake. Wherever a part of the array is invalid, its type is prefixed with `-` for readability.
 
-If a jssn tuple contains `;;`, its source JSON Schema is probably a mistake.
+If a jssn array contains `;;`, its source JSON Schema is probably a mistake.
 
 ### Unreachable Elements
 
-`prefixItems` may declare types for indices that the tuple's length can never reach.
+`prefixItems` may declare types for indices that the array's length can never reach.
 
 ```json
 {
@@ -397,13 +399,13 @@ or
 ]
 ```
 
-### Inside-Out Tuples
+### Inside-Out Arrays
 
 Consider `minItems` greater than `maxItems`: no array can ever satisfy such a schema. jssn still uses a notation richer than a plain `[]`, though, so the shape of the original mistake stays visible.
 
-`;` sits at the position `minItems` points to, and `;;` sits at the position `maxItems` points to — the same rule as in Unreachable Elements. There, `minItems <= maxItems` put `;` before `;;`; here, `minItems > maxItems` by definition, so the two markers are placed in order of value and `;;` always comes first. And because no array can satisfy this tuple at all, every element and token gets a `-` prefix — including the elements before `;;`, unlike in Unreachable Elements, where that leading portion was still reachable.
+`;` sits at the position `minItems` points to, and `;;` sits at the position `maxItems` points to — the same rule as in Unreachable Elements. There, `minItems <= maxItems` put `;` before `;;`; here, `minItems > maxItems` by definition, so the two markers are placed in order of value and `;;` always comes first. And because no array can satisfy this schema at all, every element and token gets a `-` prefix — including the elements before `;;`, unlike in Unreachable Elements, where that leading portion was still reachable.
 
-When `minItems` points past the end of `prefixItems`, that excess isn't a real `prefixItems` element — it's a virtual slot, so it reuses the open-tuple notation: a single excess slot is written as a bare type (or `any`), just like Extending by Exactly One Element; two or more excess slots reuse the `(count)..` notation from Minimum-Bounded Trailing Elements (with no type after it, since none is given). Whenever `;` lands on the very last position in the notation, nothing follows it — it appears as a trailing `;`.
+When `minItems` points past the end of `prefixItems`, that excess isn't a real `prefixItems` element — it's a virtual slot, so it reuses the open-array notation: a single excess slot is written as a bare type (or `any`), just like Extending by Exactly One Element; two or more excess slots reuse the `(count)..` notation from Minimum-Bounded Trailing Elements (with no type after it, since none is given). Whenever `;` lands on the very last position in the notation, nothing follows it — it appears as a trailing `;`.
 
 Take an example where both values are smaller than `prefixItems`'s length:
 
@@ -472,3 +474,7 @@ When `minItems` is 2 or more past `prefixItems`'s length:
 ```
 
 `minItems` (7) is 3 past `prefixItems`'s length (4), so with two or more excess slots, this reuses the `(count)..` notation from Minimum-Bounded Trailing Elements as `3..`, with a `-` prefix. Here too, `minItems`'s position coincides with the end of the notation, so `;` trails at the end.
+
+### Design Notes
+
+Uncommon arrays — unsatisfiable ones among them, in particular — could be filtered out at a validation step, and flagged as invalid input by adopting some arbitrary notation. For now, though, jssn is a notation meant to reflect JSON Schema without any loss of information, and a converter built for it is expected not to perform validation.

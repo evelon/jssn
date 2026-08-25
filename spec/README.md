@@ -13,7 +13,7 @@ JSSN's spec targets **JSON Schema Draft 2020-12**. Where syntax differs from old
 
 - [types.md](./features/types.md) — basic type names and array/object syntax
 - [required.md](./features/required.md) — required vs. optional property syntax (the `!` suffix)
-- [tuple-length.md](./features/tuple-length.md) — tuple length and open/closed array syntax (`items`, `prefixItems`, `minItems`, `maxItems`)
+- [array.md](./features/array.md) — array length and open/closed array syntax (`items`, `prefixItems`, `minItems`, `maxItems`)
 
 ## Documentation Convention
 

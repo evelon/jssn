@@ -31,18 +31,18 @@ Unlike the aliases above, `any` isn't one of JSON Schema's `type` values — it 
 }
 ```
 
-This doesn't hold inside a tuple, though: when a slot is simply an unconstrained position — nothing but `any` — it stays written out explicitly:
+This doesn't hold inside an array, though: when a slot is simply an unconstrained position — nothing but `any` — it stays written out explicitly:
 
 ```jssn
 [str, any]
 ```
 
-Dropping it there would leave an empty slot next to a comma (`[str, ]`), which reads the same as a stray trailing comma and makes the tuple's element count ambiguous.
+Dropping it there would leave an empty slot next to a comma (`[str, ]`), which reads the same as a stray trailing comma and makes the array's element count ambiguous.
 
 #### Design Notes
 
 - **A dedicated type, not merely an omission.** JSON Schema expresses "no constraint" by leaving `type` out entirely (or using an empty schema, `{}`). JSSN instead gives the concept an explicit name, `any`, so it can be named and reasoned about directly. That the _word_ `any` can often be left unwritten (see above) doesn't change this — the type itself stays a first-class concept; only its spelling is sometimes optional.
-- **Omittable only where the boundary is unambiguous.** Dropping `any` relies on something else already marking where a type would go. In an object property, the colon (or its absence) does that job. A tuple slot has no such marker — the only thing separating it from its neighbors is a comma, and an empty slot next to a comma reads the same as a stray trailing comma. So the omission works in properties but not inside a tuple.
+- **Omittable only where the boundary is unambiguous.** Dropping `any` relies on something else already marking where a type would go. In an object property, the colon (or its absence) does that job. An array slot has no such marker — the only thing separating it from its neighbors is a comma, and an empty slot next to a comma reads the same as a stray trailing comma. So the omission works in properties but not inside an array.
 - **Includes `null`.** Because `any` places no constraint at all, it also accepts `null` — this matches JSON Schema's empty-schema behavior, and differs from a future "any non-null type" union, should one be introduced.
 - **Added for the required-without-properties edge case.** JSON Schema allows a key to be listed in `required` without appearing in `properties` at all, leaving its value unconstrained (see `required.md`). `any` exists to make that case expressible in JSSN — but it isn't limited to it; it works anywhere a type is expected.
 
@@ -72,7 +72,7 @@ or
 ]
 ```
 
-For the full specification of the items-related keywords in the array type (element type constraints, whether additional elements are allowed, etc.), please refer to [tuple-length.md](tuple-length.md).
+For the full specification of the items-related keywords in the array type (element type constraints, whether additional elements are allowed, etc.), please refer to [array.md](array.md).
 
 ### Object
 
