@@ -175,7 +175,7 @@ Unlike `&`/`|`/`~`, `oneOf` is written as a call — `^(a, b, c)` for `oneOf: [a
 
 ## Combining Operators
 
-Parentheses are required whenever more than one kind of operator is mixed in the same expression — there's no defined precedence between `&`, `|`, and `~`.
+Parentheses are required whenever `&` and `|` are mixed in the same expression — there's no defined precedence between them. `~` is exempt from this, since as a unary prefix operator it unambiguously binds to only the single schema right after it (see above).
 
 ```jssn
 baseVariant & ~discontinuedVariant & (colorVariant | sizeVariant)
