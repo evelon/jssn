@@ -22,6 +22,7 @@ Equivalent to:
     "email": { "type": "string" },
     "age": { "type": "integer" }
   },
+  "required": ["name", "email", "age"],
   "additionalProperties": false
 }
 ```
@@ -30,13 +31,13 @@ Equivalent to:
 
 > **JSON Schema equivalent:** the `required` array, combined with `properties`
 
-To mark a property as required, append `!` to its key name, immediately before the colon.
+Properties are required by default. To mark a property as optional, append `?` to its key name, immediately before the colon.
 
 ```jssn
 {
-  name!: str
-  email!: str
-  age: int
+  name: str
+  email: str
+  age?: int
 }
 ```
 
@@ -56,34 +57,34 @@ Equivalent to:
 }
 ```
 
-The `!` always goes right after the key name — not before it, and not after the type.
+The `?` always goes right after the key name — not before it, and not after the type.
 
 ```jssn
-name!: str
+age?: int
 ```
 
 not
 
 ```jssn
-!name: str
+?age: int
 ```
 
 or
 
 ```jssn
-name: str!
+age: int?
 ```
 
 ## Nested Objects
 
-Each `obj`, at any depth, has its own independent set of required/optional properties. Marking a property `!` only affects whether it is required within its immediate parent object.
+Each `obj`, at any depth, has its own independent set of required/optional properties. Marking a property `?` only affects whether it is optional within its immediate parent object.
 
 ```jssn
 {
-  title!: str
-  meta: {
-    tags!: arr
-    notes: str
+  title: str
+  meta?: {
+    tags: arr
+    notes?: str
   }
 }
 ```
@@ -112,12 +113,12 @@ Equivalent to:
 
 ## Required Without a Type Constraint
 
-JSON Schema allows a key to appear in `required` without appearing in `properties` at all — the key must be present, but its value isn't constrained to any particular shape. In JSSN, this is written as a required property typed `any`.
+JSON Schema allows a key to appear in `required` without appearing in `properties` at all — the key must be present, but its value isn't constrained to any particular shape. In JSSN, a bare key (no colon, no type) already means "required, typed `any`" — see [types.md](types.md) for the bare-key `any` shorthand — so this case needs no extra marker at all.
 
 ```jssn
 {
-  id!
-  name!: str
+  id
+  name: str
 }
 ```
 
@@ -137,10 +138,13 @@ Equivalent to:
 
 Note that `id` appears in `required` but not in `properties` — it's the exact shape described above.
 
+The same combination works the other way too: `id?` (bare key, `?` suffix) is optional and typed `any`.
+
 ## Design Notes
 
-- **Optional by default** matches JSON Schema's own default (properties are optional unless listed in `required`), rather than TypeScript's required-by-default convention.
-- **Not `?` for optional.** Marking optional properties with `?` (required-by-default, like TypeScript) was considered, but rejected for now: it would flip the default away from JSON Schema's optional-by-default semantics, and it would use up `?`, which may be wanted later for a nullable-value shorthand (e.g. `str?` meaning "string or null").
+- **Required by default, inverting JSON Schema's own default.** JSON Schema treats a property as optional unless it's listed in `required`. JSSN flips this so that omitting a marker means required. This keeps required/optional consistent with the two other places JSSN already flips JSON Schema's default from open to closed — array items (see [array.md](array.md)) and `additionalProperties` (see below) — both of which are unconstrained/open by default in JSON Schema but closed by default in JSSN. Leaving `required` as the odd one out, still following JSON Schema's optional-by-default convention, would have made JSSN internally inconsistent about what "no marker" means.
+- **`?` for optional, not `!` for required.** An earlier version of this spec used `!` to mark a property required, optional by default (matching JSON Schema's own default, see above). In practice, forgetting to mark a property required (a missing `!`) is a much easier mistake to make — and a much easier one to miss, since the unmarked property looks identical to any other optional property — than mismarking a property that should be optional. Marking optional properties with `?` instead means the common mistake (forgetting to mark a property optional) produces a property that looks the same as every other required property, and the rarer, more consequential mistake (a property that's accidentally optional) is visible immediately as a stray `?`. This also uses `?` for a purpose closer to its meaning in TypeScript and similar languages, where `?` marks optionality rather than requiredness.
+- **Spends the `?` glyph the earlier design reserved for nullability.** The `!`-based design considered and rejected `?` for optionality specifically to keep it free for a possible nullable-value shorthand later (e.g. `str?` meaning "string or null"), since a single glyph can't cleanly carry both meanings if used the same way in both spots. This version accepts that trade-off: `?` after a *key* now means optional, so a future nullable shorthand would need a different marker, or would need to reuse `?` after a *type* instead and rely on position (key vs. type) to disambiguate. Given how much more common the required/optional mistake is than the need for a nullable shorthand (still unscheduled — see the roadmap in [README.md](../README.md)), this is judged worth it.
 
 ## Additional Properties
 
@@ -177,7 +181,8 @@ Equivalent to:
     "name": { "type": "string" },
     "email": { "type": "string" },
     "age": { "type": "integer" }
-  }
+  },
+  "required": ["name", "email", "age"]
 }
 ```
 
@@ -202,6 +207,7 @@ Equivalent to:
     "email": { "type": "string" },
     "age": { "type": "integer" }
   },
+  "required": ["name", "email", "age"],
   "additionalProperties": { "type": "string" }
 }
 ```
@@ -272,11 +278,12 @@ Equivalent to:
     "name": { "type": "string" },
     "email": { "type": "string" },
     "age": { "type": "integer" }
-  }
+  },
+  "required": ["name", "email", "age"]
 }
 ```
 
 ## Out of Scope (For Now)
 
 - `propertyNames` may go between the size and the obj body (`{}`). The details are still undecided.
-- Relational/conditional requirements — e.g. "if property A is present, property B is required" (JSON Schema's `dependentRequired`, `dependentSchemas`, `if`/`then`/`else`) — are not covered here. These describe a relationship between properties rather than a property of a single key, so they will need their own construct rather than extending `!`.
+- Relational/conditional requirements — e.g. "if property A is present, property B is required" (JSON Schema's `dependentRequired`, `dependentSchemas`, `if`/`then`/`else`) — are not covered here. These describe a relationship between properties rather than a property of a single key, so they will need their own construct rather than extending `?`.

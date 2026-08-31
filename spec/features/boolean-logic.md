@@ -10,11 +10,11 @@ JSON Schema's boolean-logic keywords require a value to satisfy multiple sub-sch
 
 ```jssn
 address & {
-  label: str
+  label?: str
 }
 
 defs <
-  address = { street: str }
+  address = { street?: str }
 >
 ```
 
@@ -48,8 +48,8 @@ An `obj` is closed by default (see [object.md](object.md)), so intersecting two 
 
 This isn't confirmed yet, but the working assumption is:
 
-- `address & { label: str }` → `unevaluatedProperties: false`
-- `address & { label: str } & {...}` → `unevaluatedProperties: true` (the trailing bare `{...}` reopens it, same as it does for a plain `obj`)
+- `address & { label?: str }` → `unevaluatedProperties: false`
+- `address & { label?: str } & {...}` → `unevaluatedProperties: true` (the trailing bare `{...}` reopens it, same as it does for a plain `obj`)
 
 ## `|` — Union (anyOf)
 
@@ -59,8 +59,8 @@ This isn't confirmed yet, but the working assumption is:
 circle | rectangle
 
 defs <
-  circle = { shape!: "circle", radius!: num }
-  rectangle = { shape!: "rectangle", width!: num, height!: num }
+  circle = { shape: "circle", radius: num }
+  rectangle = { shape: "rectangle", width: num, height: num }
 >
 ```
 
@@ -99,14 +99,14 @@ Like `&`, `|` chains for any number of schemas: `a | b | c | ...` is `anyOf: [a,
 
 ```jssn
 {
-  username!: str
-  role!: str & ~deprecatedRole
-  team: team
+  username: str
+  role: str & ~deprecatedRole
+  team?: team
 }
 
 defs <
   deprecatedRole = enum("superadmin", "root", "godmode")
-  team = { id!: str, name: str }
+  team = { id: str, name?: str }
 >
 ```
 
@@ -152,8 +152,8 @@ This one is rougher than the other three — worked out from a single example so
 
 ```jssn
 {
-  value: num
-  next: ^(#, null)
+  value?: num
+  next?: ^(#, null)
 }
 ```
 

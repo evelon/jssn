@@ -36,13 +36,15 @@ Equivalent to:
   "properties": {
     "billing_address": { "$ref": "#/$defs/address" }
   },
+  "required": ["billing_address"],
   "$defs": {
     "address": {
       "type": "object",
       "properties": {
         "street": { "type": "string" },
         "city": { "type": "string" }
-      }
+      },
+      "required": ["street", "city"]
     }
   }
 }
@@ -143,18 +145,21 @@ Equivalent to:
   "properties": {
     "order": { "$ref": "#/$defs/order" }
   },
+  "required": ["order"],
   "$defs": {
     "order": {
       "type": "object",
       "properties": {
         "customer": { "$ref": "#/$defs/person" }
-      }
+      },
+      "required": ["customer"]
     },
     "person": {
       "type": "object",
       "properties": {
         "name": { "type": "string" }
-      }
+      },
+      "required": ["name"]
     }
   }
 }
@@ -191,7 +196,8 @@ Equivalent to:
           "type": "array",
           "items": { "$ref": "#/$defs/node" }
         }
-      }
+      },
+      "required": ["value", "children"]
     }
   }
 }
@@ -231,7 +237,8 @@ Equivalent to:
         "op": { "enum": ["+", "-", "*", "/"] },
         "left": { "$ref": "#/$defs/expr" },
         "right": { "$ref": "#/$defs/expr" }
-      }
+      },
+      "required": ["op", "left", "right"]
     }
   }
 }
@@ -336,16 +343,19 @@ Equivalent to:
       "properties": {
         "item": { "$ref": "#/properties/order/$defs/lineItem" }
       },
+      "required": ["item"],
       "$defs": {
         "lineItem": {
           "type": "object",
           "properties": {
             "sku": { "type": "string" }
-          }
+          },
+          "required": ["sku"]
         }
       }
     }
-  }
+  },
+  "required": ["order"]
 }
 ```
 
