@@ -269,15 +269,9 @@ Equivalent to:
   "minProperties": 3,
   "maxProperties": 5,
   "properties": {
-    "name": {
-      "type": "string"
-    },
-    "email": {
-      "type": "string"
-    },
-    "age": {
-      "type": "integer"
-    }
+    "name": { "type": "string" },
+    "email": { "type": "string" },
+    "age": { "type": "integer" }
   }
 }
 ```
