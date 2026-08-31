@@ -4,6 +4,18 @@ This file documents notable changes to the JSSN specification (spec/). The conve
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.2] - 2026-08-31
+
+### Added
+
+- `unevaluatedItems` coverage in `boolean-logic.md`, alongside the existing `unevaluatedProperties` coverage, under a section renamed from "Closed Objects and `&`" to "Closed Collections and `&`": arrays close by default under `&` the same way objects do, reopened explicitly with `& [...]`; includes a worked caution about a nested `unevaluatedItems: true` getting overridden by an outer `false`, and why the JSON Schema → JSSN converter must detect and account for that rather than converting each `allOf` branch in isolation
+
+## [0.5.1] - 2026-08-31
+
+### Changed
+
+- Flipped required/optional property notation: properties are now required by default, and `?` (not `!`) marks a property optional — the reverse of the previous default. This keeps required/optional consistent with the other two places JSSN already flips JSON Schema's open-by-default to closed-by-default (array items, `additionalProperties`), and makes the more consequential mistake (an accidentally-optional property) visible as a stray `?`, rather than the previous, easy-to-miss mistake of a forgotten `!`. Updated all examples across `object.md`, `boolean-logic.md`, and `references.md` accordingly.
+
 ## [0.5.0] - 2026-08-31
 
 ### Added
@@ -59,6 +71,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Indentation recommendations
 - Basic type rules
 
+[0.5.2]: https://github.com/evelon/jssn/compare/spec-v0.5.1...spec-v0.5.2
+[0.5.1]: https://github.com/evelon/jssn/compare/spec-v0.5.0...spec-v0.5.1
 [0.5.0]: https://github.com/evelon/jssn/compare/spec-v0.4.0...spec-v0.5.0
 [0.4.0]: https://github.com/evelon/jssn/compare/spec-v0.3.0...spec-v0.4.0
 [0.3.0]: https://github.com/evelon/jssn/compare/spec-v0.2.0...spec-v0.3.0
