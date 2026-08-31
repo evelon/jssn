@@ -15,6 +15,7 @@ JSSN's spec targets **JSON Schema Draft 2020-12**. Where syntax differs from old
 - [array.md](./features/array.md) — array length and open/closed array syntax (`items`, `prefixItems`, `minItems`, `maxItems`)
 - [object.md](./features/object.md) — object syntax: required vs. optional properties (the `!` suffix), `additionalProperties`, `patternProperties`, `minProperties`/`maxProperties`
 - [boolean-logic.md](./features/boolean-logic.md) — `&` (`allOf`), `|` (`anyOf`), `^(...)` (`oneOf`), `~` (`not`)
+- [references.md](./features/references.md) — reusable schemas (`defs < ... >`) and reference syntax: nearest reference (`$name`), absolute path (`#$name`), `$anchor`, `$dynamicRef`/`$dynamicAnchor`
 
 ## Documentation Convention
 
@@ -24,8 +25,7 @@ Each feature document notes, directly under its title (and under relevant sub-se
 
 - Union types / nullable values
 - `enum` / `const`
-- String, number, and array value constraints (`minLength`, `pattern`, `minimum`, `maximum`, `uniqueItems`, `contains`/`minContains`/`maxContains`, etc.)
-- Reuse / references (corresponds to JSON Schema's `$ref`/`$defs`)
+- String, number, and array value constraints (`minLength`, `pattern`, `minimum`, `maximum`, `uniqueItems`, `contains`/`minContains`/`maxContains`, `propertyNames`, etc.)
 - `if`/`then`/`else` (conditional validation)
 - Relational/conditional required properties (corresponds to JSON Schema's `dependentRequired`/`dependentSchemas`)
 - `default` / `examples`

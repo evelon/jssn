@@ -4,6 +4,12 @@ This file documents notable changes to the JSSN specification (spec/). The conve
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-08-31
+
+### Added
+
+- Reusable schemas and references, in a new `references.md`: `defs < ... >` for declaring `$defs`; three reference forms — nearest reference (`$name`), absolute path (`#$name`, or `#path.to$name` for defs outside the root), and raw JSON Pointer (`#/$defs/...`); `$anchor`; the root reference (`#`); and self-referencing/mutually-recursive defs
+
 ## [0.4.0] - 2026-08-31
 
 ### Added
@@ -53,6 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Indentation recommendations
 - Basic type rules
 
+[0.5.0]: https://github.com/evelon/jssn/compare/spec-v0.4.0...spec-v0.5.0
 [0.4.0]: https://github.com/evelon/jssn/compare/spec-v0.3.0...spec-v0.4.0
 [0.3.0]: https://github.com/evelon/jssn/compare/spec-v0.2.0...spec-v0.3.0
 [0.2.0]: https://github.com/evelon/jssn/compare/spec-v0.1.1...spec-v0.2.0
