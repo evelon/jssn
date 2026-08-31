@@ -14,6 +14,7 @@ JSSN's spec targets **JSON Schema Draft 2020-12**. Where syntax differs from old
 - [types.md](./features/types.md) — basic type names and array/object syntax
 - [array.md](./features/array.md) — array length and open/closed array syntax (`items`, `prefixItems`, `minItems`, `maxItems`)
 - [object.md](./features/object.md) — object syntax: required vs. optional properties (the `!` suffix), `additionalProperties`, `patternProperties`, `minProperties`/`maxProperties`
+- [boolean-logic.md](./features/boolean-logic.md) — `&` (`allOf`), `|` (`anyOf`), `^(...)` (`oneOf`), `~` (`not`)
 
 ## Documentation Convention
 
@@ -25,6 +26,6 @@ Each feature document notes, directly under its title (and under relevant sub-se
 - `enum` / `const`
 - String, number, and array value constraints (`minLength`, `pattern`, `minimum`, `maximum`, `uniqueItems`, `contains`/`minContains`/`maxContains`, etc.)
 - Reuse / references (corresponds to JSON Schema's `$ref`/`$defs`)
-- Combinators (`allOf`/`anyOf`/`oneOf`/`not`, `if`/`then`/`else`)
+- `if`/`then`/`else` (conditional validation)
 - Relational/conditional required properties (corresponds to JSON Schema's `dependentRequired`/`dependentSchemas`)
 - `default` / `examples`
