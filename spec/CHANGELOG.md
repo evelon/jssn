@@ -4,13 +4,13 @@ This file documents notable changes to the JSSN specification (spec/). The conve
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.7.0] - 2026-08-31
+## [0.5.2] - 2026-08-31
 
 ### Added
 
 - `unevaluatedItems` coverage in `boolean-logic.md`, alongside the existing `unevaluatedProperties` coverage, under a section renamed from "Closed Objects and `&`" to "Closed Collections and `&`": arrays close by default under `&` the same way objects do, reopened explicitly with `& [...]`; includes a worked caution about a nested `unevaluatedItems: true` getting overridden by an outer `false`, and why the JSON Schema → JSSN converter must detect and account for that rather than converting each `allOf` branch in isolation
 
-## [0.6.0] - 2026-08-31
+## [0.5.1] - 2026-08-31
 
 ### Changed
 
@@ -71,8 +71,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Indentation recommendations
 - Basic type rules
 
-[0.7.0]: https://github.com/evelon/jssn/compare/spec-v0.6.0...spec-v0.7.0
-[0.6.0]: https://github.com/evelon/jssn/compare/spec-v0.5.0...spec-v0.6.0
+[0.5.2]: https://github.com/evelon/jssn/compare/spec-v0.5.1...spec-v0.5.2
+[0.5.1]: https://github.com/evelon/jssn/compare/spec-v0.5.0...spec-v0.5.1
 [0.5.0]: https://github.com/evelon/jssn/compare/spec-v0.4.0...spec-v0.5.0
 [0.4.0]: https://github.com/evelon/jssn/compare/spec-v0.3.0...spec-v0.4.0
 [0.3.0]: https://github.com/evelon/jssn/compare/spec-v0.2.0...spec-v0.3.0
